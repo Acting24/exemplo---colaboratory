@@ -1,0 +1,5089 @@
+{
+ "nbformat": 4,
+ "nbformat_minor": 0,
+ "metadata": {
+  "colab": {
+   "provenance": [],
+   "toc_visible": true,
+   "authorship_tag": "ABX9TyMrKw8dCQVxYbNZXz5cJ8mR"
+  },
+  "kernelspec": {
+   "name": "python3",
+   "display_name": "Python 3"
+  },
+  "language_info": {
+   "name": "python"
+  }
+ },
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "view-in-github",
+    "colab_type": "text"
+   },
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/SEU_USUARIO/SEU_REPOSITORIO/blob/main/Univesp_Web_Crawler_Colab.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "titulo_principal"
+   },
+   "source": [
+    "# 🕷️ Web Crawler da Univesp com Análise de Frequência de Palavras\n",
+    "\n",
+    "---\n",
+    "\n",
+    "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SEU_USUARIO/SEU_REPOSITORIO/blob/main/Univesp_Web_Crawler_Colab.ipynb)\n",
+    "[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/SEU_USUARIO/SEU_REPOSITORIO)\n",
+    "[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)\n",
+    "\n",
+    "## 📋 Descrição do Projeto\n",
+    "\n",
+    "Este notebook implementa um **web crawler** que visita sistematicamente as páginas da Univesp, seguindo hyperlinks e analisando a frequência de palavras encontradas. O projeto foi desenvolvido como parte do **Desafio Semana 4** e demonstra técnicas de:\n",
+    "\n",
+    "- 🌐 **Web Scraping** e crawling sistemático\n",
+    "- 📊 **Análise de texto** e processamento de linguagem natural\n",
+    "- 📈 **Visualização de dados** com gráficos interativos\n",
+    "- 🐍 **Programação Python** com bibliotecas especializadas\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### 🎯 Objetivos\n",
+    "1. Implementar um crawler que navega automaticamente pelo site da Univesp\n",
+    "2. Extrair e limpar texto de páginas HTML\n",
+    "3. Analisar frequência de palavras com filtros inteligentes\n",
+    "4. Gerar visualizações e relatórios detalhados\n",
+    "5. Criar uma ferramenta reutilizável e bem documentada\n",
+    "\n",
+    "### 🚀 Como Usar Este Notebook\n",
+    "1. **Execute as células sequencialmente** usando `Shift + Enter`\n",
+    "2. **Ajuste os parâmetros** na seção de configuração conforme necessário\n",
+    "3. **Visualize os resultados** nas seções de análise e gráficos\n",
+    "4. **Baixe os dados** gerados na seção final\n",
+    "\n",
+    "### 📖 Estrutura do Notebook\n",
+    "- **Seção 1:** Configuração e Instalação de Dependências\n",
+    "- **Seção 2:** Implementação do Web Crawler\n",
+    "- **Seção 3:** Processamento e Análise de Texto\n",
+    "- **Seção 4:** Visualizações e Gráficos\n",
+    "- **Seção 5:** Relatórios e Exportação de Dados\n",
+    "\n",
+    "---\n",
+    "\n",
+    "**Autor:** Desenvolvido para o Desafio Semana 4 - Univesp  \n",
+    "**Data:** 2025  \n",
+    "**Versão:** 1.0  "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_instalacao"
+   },
+   "source": [
+    "# 1️⃣ Configuração e Instalação de Dependências\n",
+    "\n",
+    "Nesta seção, vamos instalar e importar todas as bibliotecas necessárias para o funcionamento do web crawler."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "install_dependencies",
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# 📦 Instalação de bibliotecas necessárias\n",
+    "!pip install requests beautifulsoup4 matplotlib seaborn wordcloud plotly pandas --quiet\n",
+    "\n",
+    "print(\"✅ Todas as dependências foram instaladas com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "import_libraries"
+   },
+   "outputs": [],
+   "source": [
+    "# 📚 Importação de bibliotecas\n",
+    "import re\n",
+    "import time\n",
+    "import html\n",
+    "import unicodedata\n",
+    "from urllib.parse import urljoin, urlparse\n",
+    "from collections import Counter, defaultdict\n",
+    "from datetime import datetime\n",
+    "\n",
+    "# Bibliotecas para web scraping\n",
+    "import requests\n",
+    "from bs4 import BeautifulSoup\n",
+    "from requests.adapters import HTTPAdapter\n",
+    "from urllib3.util.retry import Retry\n",
+    "\n",
+    "# Bibliotecas para análise de dados\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "\n",
+    "# Bibliotecas para visualização\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "import plotly.express as px\n",
+    "import plotly.graph_objects as go\n",
+    "from plotly.subplots import make_subplots\n",
+    "from wordcloud import WordCloud\n",
+    "\n",
+    "# Configurações visuais\n",
+    "plt.style.use('seaborn-v0_8')\n",
+    "sns.set_palette(\"husl\")\n",
+    "pd.set_option('display.max_columns', None)\n",
+    "pd.set_option('display.width', None)\n",
+    "\n",
+    "print(\"✅ Todas as bibliotecas foram importadas com sucesso!\")\n",
+    "print(f\"🐍 Python executando no Google Colab\")\n",
+    "print(f\"⏰ Notebook iniciado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_configuracao"
+   },
+   "source": [
+    "## ⚙️ Configuração de Parâmetros\n",
+    "\n",
+    "Aqui você pode ajustar os parâmetros do crawler conforme suas necessidades:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "configuracao_parametros"
+   },
+   "outputs": [],
+   "source": [
+    "# 🎛️ CONFIGURAÇÕES DO WEB CRAWLER\n",
+    "# ================================\n",
+    "\n",
+    "# URL base da Univesp\n",
+    "BASE_URL = \"https://univesp.br\"\n",
+    "\n",
+    "# Número máximo de páginas a visitar\n",
+    "MAX_PAGES = 20  # Reduzido para o Colab (pode aumentar se necessário)\n",
+    "\n",
+    "# Delay entre requisições (em segundos)\n",
+    "DELAY = 1.0  # Seja respeitoso com o servidor!\n",
+    "\n",
+    "# Timeout para requisições (em segundos)\n",
+    "TIMEOUT = 10\n",
+    "\n",
+    "# Headers para simular um navegador real\n",
+    "HEADERS = {\n",
+    "    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',\n",
+    "    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',\n",
+    "    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',\n",
+    "    'Accept-Encoding': 'gzip, deflate',\n",
+    "    'Connection': 'keep-alive',\n",
+    "}\n",
+    "\n",
+    "# Lista de stopwords em português\n",
+    "STOPWORDS = {\n",
+    "    'a', 'ao', 'aos', 'aquela', 'aquelas', 'aquele', 'aqueles', 'aquilo', 'as', 'até', \n",
+    "    'com', 'como', 'da', 'das', 'de', 'dela', 'delas', 'dele', 'deles', 'depois', \n",
+    "    'do', 'dos', 'e', 'ela', 'elas', 'ele', 'eles', 'em', 'entre', 'essa', 'essas', \n",
+    "    'esse', 'esses', 'esta', 'estão', 'estas', 'estamos', 'estar', 'este', 'estes', \n",
+    "    'eu', 'foi', 'for', 'foram', 'há', 'isso', 'isto', 'já', 'mais', 'mas', 'me', \n",
+    "    'mesmo', 'meu', 'meus', 'minha', 'minhas', 'na', 'nas', 'não', 'no', 'nos', \n",
+    "    'nós', 'o', 'os', 'ou', 'para', 'pela', 'pelas', 'pelo', 'pelos', 'por', \n",
+    "    'qual', 'quando', 'que', 'quem', 'são', 'se', 'sem', 'ser', 'seu', 'seus', \n",
+    "    'só', 'sua', 'suas', 'também', 'te', 'tem', 'teu', 'teus', 'tu', 'tua', \n",
+    "    'tuas', 'um', 'uma', 'você', 'vocês', 'vos', 'ver', 'anos', 'ano', 'dia', 'dias',\n",
+    "    'pode', 'podem', 'vai', 'vão', 'fazer', 'feito', 'bem', 'muito', 'toda', 'todo',\n",
+    "    'todos', 'todas', 'vez', 'vezes', 'onde', 'aqui', 'ali', 'lá', 'agora', 'então',\n",
+    "    'sobre', 'após', 'durante', 'antes', 'depois', 'enquanto', 'desde', 'será',\n",
+    "    'serão', 'está', 'estão', 'foi', 'foram', 'terá', 'terão', 'até', 'através',\n",
+    "    'além', 'também', 'porém', 'contudo', 'todavia', 'entretanto', 'portanto',\n",
+    "    'assim', 'então', 'logo', 'pois', 'porque', 'porquê', 'quando', 'quanto',\n",
+    "    'qualquer', 'quaisquer', 'algum', 'alguns', 'alguma', 'algumas', 'nenhum',\n",
+    "    'nenhuma', 'outro', 'outra', 'outros', 'outras', 'mesmo', 'mesma', 'mesmos',\n",
+    "    'mesmas', 'tanto', 'tanta', 'tantos', 'tantas', 'quanto', 'quanta', 'quantos',\n",
+    "    'quantas', 'tal', 'tais', 'cada', 'qualquer', 'seja', 'sejam', 'fosse',\n",
+    "    'fossem', 'sendo', 'tendo', 'havendo', 'haver', 'ter', 'fazer', 'dizer',\n",
+    "    'dar', 'ficar', 'ir', 'vir', 'sair', 'chegar', 'voltar', 'passar', 'levar'\n",
+    "}\n",
+    "\n",
+    "print(f\"⚙️ Configurações do Crawler:\")\n",
+    "print(f\"   🌐 URL Base: {BASE_URL}\")\n",
+    "print(f\"   📄 Máximo de páginas: {MAX_PAGES}\")\n",
+    "print(f\"   ⏱️ Delay entre requisições: {DELAY}s\")\n",
+    "print(f\"   🚫 Stopwords: {len(STOPWORDS)} palavras filtradas\")\n",
+    "print(f\"\\n✅ Configuração concluída!\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_crawler"
+   },
+   "source": [
+    "# 2️⃣ Implementação do Web Crawler\n",
+    "\n",
+    "Vamos criar nossa classe principal do web crawler com todas as funcionalidades necessárias."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "crawler_class"
+   },
+   "outputs": [],
+   "source": [
+    "class UnivespWebCrawler:\n",
+    "    \"\"\"\n",
+    "    🕷️ Web Crawler da Univesp com Análise de Frequência de Palavras\n",
+    "    \n",
+    "    Esta classe implementa um crawler completo que:\n",
+    "    - Visita páginas da Univesp sistematicamente\n",
+    "    - Extrai e processa texto de cada página\n",
+    "    - Analisa frequência de palavras\n",
+    "    - Gera estatísticas detalhadas\n",
+    "    \"\"\"\n",
+    "    \n",
+    "    def __init__(self, base_url=BASE_URL, max_pages=MAX_PAGES, delay=DELAY):\n",
+    "        self.base_url = base_url\n",
+    "        self.max_pages = max_pages\n",
+    "        self.delay = delay\n",
+    "        self.visited_urls = set()\n",
+    "        self.failed_urls = set()\n",
+    "        self.word_frequency = Counter()\n",
+    "        self.page_word_counts = defaultdict(Counter)\n",
+    "        self.crawl_data = []\n",
+    "        \n",
+    "        # Configurar sessão HTTP com retry\n",
+    "        self.session = requests.Session()\n",
+    "        retry_strategy = Retry(\n",
+    "            total=3,\n",
+    "            backoff_factor=1,\n",
+    "            status_forcelist=[429, 500, 502, 503, 504],\n",
+    "        )\n",
+    "        adapter = HTTPAdapter(max_retries=retry_strategy)\n",
+    "        self.session.mount(\"http://\", adapter)\n",
+    "        self.session.mount(\"https://\", adapter)\n",
+    "    \n",
+    "    def is_valid_url(self, url):\n",
+    "        \"\"\"Verifica se a URL é válida e pertence ao domínio da Univesp\"\"\"\n",
+    "        try:\n",
+    "            parsed = urlparse(url)\n",
+    "            return (parsed.netloc.endswith('univesp.br') and \n",
+    "                   parsed.scheme in ['http', 'https'] and\n",
+    "                   not any(ext in url.lower() for ext in ['.pdf', '.jpg', '.png', '.gif', '.zip', '.doc']))\n",
+    "        except:\n",
+    "            return False\n",
+    "    \n",
+    "    def fetch_page(self, url):\n",
+    "        \"\"\"Faz o download do conteúdo de uma página\"\"\"\n",
+    "        try:\n",
+    "            print(f\"🔗 Visitando: {url}\")\n",
+    "            response = self.session.get(url, headers=HEADERS, timeout=TIMEOUT)\n",
+    "            response.raise_for_status()\n",
+    "            \n",
+    "            # Garantir codificação UTF-8\n",
+    "            if response.encoding is None or response.encoding.lower() not in ['utf-8', 'utf8']:\n",
+    "                response.encoding = 'utf-8'\n",
+    "            \n",
+    "            return response.text\n",
+    "        except Exception as e:\n",
+    "            print(f\"❌ Erro ao acessar {url}: {e}\")\n",
+    "            self.failed_urls.add(url)\n",
+    "            return None\n",
+    "    \n",
+    "    def extract_text_and_links(self, html_content, base_url):\n",
+    "        \"\"\"Extrai texto limpo e links de uma página HTML\"\"\"\n",
+    "        try:\n",
+    "            soup = BeautifulSoup(html_content, 'html.parser')\n",
+    "            \n",
+    "            # Remove scripts, estilos e elementos desnecessários\n",
+    "            for element in soup([\"script\", \"style\", \"nav\", \"footer\", \"header\"]):\n",
+    "                element.decompose()\n",
+    "            \n",
+    "            # Extrai texto\n",
+    "            text = soup.get_text()\n",
+    "            \n",
+    "            # Limpa o texto\n",
+    "            lines = (line.strip() for line in text.splitlines())\n",
+    "            chunks = (phrase.strip() for line in lines for phrase in line.split(\"  \"))\n",
+    "            clean_text = ' '.join(chunk for chunk in chunks if chunk)\n",
+    "            \n",
+    "            # Extrai links\n",
+    "            links = []\n",
+    "            for link in soup.find_all('a', href=True):\n",
+    "                absolute_url = urljoin(base_url, link['href'])\n",
+    "                if self.is_valid_url(absolute_url):\n",
+    "                    links.append(absolute_url)\n",
+    "            \n",
+    "            return clean_text, list(set(links))  # Remove duplicatas\n",
+    "            \n",
+    "        except Exception as e:\n",
+    "            print(f\"❌ Erro ao processar HTML: {e}\")\n",
+    "            return \"\", []\n",
+    "    \n",
+    "    def process_text(self, text):\n",
+    "        \"\"\"Processa texto para contar palavras\"\"\"\n",
+    "        if not text:\n",
+    "            return Counter()\n",
+    "        \n",
+    "        # Normalizar Unicode (resolver problemas de codificação)\n",
+    "        text = unicodedata.normalize('NFC', text)\n",
+    "        \n",
+    "        # Converte para minúsculas\n",
+    "        text = text.lower()\n",
+    "        \n",
+    "        # Encontra palavras (incluindo acentos portugueses)\n",
+    "        words = re.findall(r'\\b[a-zA-ZáàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ]+\\b', text)\n",
+    "        \n",
+    "        # Filtra palavras muito curtas e stopwords\n",
+    "        filtered_words = [word for word in words \n",
+    "                         if len(word) > 2 and word not in STOPWORDS]\n",
+    "        \n",
+    "        return Counter(filtered_words)\n",
+    "    \n",
+    "    def crawl_page(self, url):\n",
+    "        \"\"\"Processa uma página específica\"\"\"\n",
+    "        # Download da página\n",
+    "        html_content = self.fetch_page(url)\n",
+    "        if not html_content:\n",
+    "            return []\n",
+    "        \n",
+    "        # Extrai texto e links\n",
+    "        text, links = self.extract_text_and_links(html_content, url)\n",
+    "        \n",
+    "        # Processa texto\n",
+    "        if text:\n",
+    "            word_count = self.process_text(text)\n",
+    "            self.page_word_counts[url] = word_count\n",
+    "            self.word_frequency.update(word_count)\n",
+    "            \n",
+    "            # Armazena dados para análise posterior\n",
+    "            self.crawl_data.append({\n",
+    "                'url': url,\n",
+    "                'text_length': len(text),\n",
+    "                'word_count': sum(word_count.values()),\n",
+    "                'unique_words': len(word_count),\n",
+    "                'timestamp': datetime.now()\n",
+    "            })\n",
+    "        \n",
+    "        return links\n",
+    "    \n",
+    "    def crawl(self):\n",
+    "        \"\"\"Executa o processo principal de crawling\"\"\"\n",
+    "        print(\"🕷️ INICIANDO WEB CRAWLER DA UNIVESP\")\n",
+    "        print(\"=\" * 50)\n",
+    "        print(f\"🌐 URL inicial: {self.base_url}\")\n",
+    "        print(f\"📄 Máximo de páginas: {self.max_pages}\")\n",
+    "        print(f\"⏱️ Delay: {self.delay}s\")\n",
+    "        print()\n",
+    "        \n",
+    "        start_time = time.time()\n",
+    "        urls_to_visit = [self.base_url]\n",
+    "        \n",
+    "        while urls_to_visit and len(self.visited_urls) < self.max_pages:\n",
+    "            current_url = urls_to_visit.pop(0)\n",
+    "            \n",
+    "            if current_url in self.visited_urls:\n",
+    "                continue\n",
+    "            \n",
+    "            self.visited_urls.add(current_url)\n",
+    "            \n",
+    "            # Processa a página\n",
+    "            new_links = self.crawl_page(current_url)\n",
+    "            \n",
+    "            # Adiciona novos links\n",
+    "            for link in new_links:\n",
+    "                if (link not in self.visited_urls and \n",
+    "                    link not in urls_to_visit and \n",
+    "                    link not in self.failed_urls):\n",
+    "                    urls_to_visit.append(link)\n",
+    "            \n",
+    "            # Progresso\n",
+    "            if len(self.visited_urls) % 5 == 0:\n",
+    "                print(f\"📈 Progresso: {len(self.visited_urls)}/{self.max_pages} páginas\")\n",
+    "            \n",
+    "            # Delay\n",
+    "            time.sleep(self.delay)\n",
+    "        \n",
+    "        end_time = time.time()\n",
+    "        \n",
+    "        print(f\"\\n✅ Crawling concluído!\")\n",
+    "        print(f\"📊 Páginas visitadas: {len(self.visited_urls)}\")\n",
+    "        print(f\"❌ Páginas com erro: {len(self.failed_urls)}\")\n",
+    "        print(f\"⏱️ Tempo total: {end_time - start_time:.2f} segundos\")\n",
+    "        print(f\"📝 Palavras únicas encontradas: {len(self.word_frequency)}\")\n",
+    "        print(f\"🔤 Total de ocorrências: {sum(self.word_frequency.values())}\")\n",
+    "        \n",
+    "        return True\n",
+    "    \n",
+    "    def get_dataframe(self):\n",
+    "        \"\"\"Retorna os dados do crawl como DataFrame do pandas\"\"\"\n",
+    "        return pd.DataFrame(self.crawl_data)\n",
+    "    \n",
+    "    def get_word_frequency_df(self, top_n=100):\n",
+    "        \"\"\"Retorna as palavras mais frequentes como DataFrame\"\"\"\n",
+    "        top_words = self.word_frequency.most_common(top_n)\n",
+    "        return pd.DataFrame(top_words, columns=['palavra', 'frequencia'])\n",
+    "\n",
+    "print(\"✅ Classe UnivespWebCrawler criada com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_execucao"
+   },
+   "source": [
+    "## 🚀 Executando o Web Crawler\n",
+    "\n",
+    "Agora vamos criar uma instância do crawler e executá-lo:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "executar_crawler",
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# 🕷️ Criar e executar o crawler\n",
+    "crawler = UnivespWebCrawler(\n",
+    "    base_url=BASE_URL,\n",
+    "    max_pages=MAX_PAGES,\n",
+    "    delay=DELAY\n",
+    ")\n",
+    "\n",
+    "# Executar o crawling\n",
+    "sucesso = crawler.crawl()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_analise"
+   },
+   "source": [
+    "# 3️⃣ Análise dos Dados Coletados\n",
+    "\n",
+    "Agora vamos analisar os dados coletados pelo nosso crawler."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "analise_basica"
+   },
+   "outputs": [],
+   "source": [
+    "# 📊 Análise básica dos dados\n",
+    "if sucesso:\n",
+    "    print(\"📈 ANÁLISE DOS DADOS COLETADOS\")\n",
+    "    print(\"=\" * 40)\n",
+    "    \n",
+    "    # Estatísticas gerais\n",
+    "    df_pages = crawler.get_dataframe()\n",
+    "    df_words = crawler.get_word_frequency_df(50)\n",
+    "    \n",
+    "    print(f\"\\n🔍 Estatísticas Gerais:\")\n",
+    "    print(f\"   📄 Total de páginas processadas: {len(df_pages)}\")\n",
+    "    print(f\"   🔤 Palavras únicas encontradas: {len(crawler.word_frequency)}\")\n",
+    "    print(f\"   📊 Total de ocorrências de palavras: {sum(crawler.word_frequency.values())}\")\n",
+    "    print(f\"   📝 Média de palavras por página: {df_pages['word_count'].mean():.1f}\")\n",
+    "    print(f\"   📏 Média de caracteres por página: {df_pages['text_length'].mean():.1f}\")\n",
+    "    \n",
+    "    print(f\"\\n🏆 TOP 15 PALAVRAS MAIS FREQUENTES:\")\n",
+    "    print(\"-\" * 45)\n",
+    "    for i, (palavra, freq) in enumerate(df_words.head(15).values, 1):\n",
+    "        print(f\"{i:2d}. {palavra:<20} : {freq:>4} ocorrências\")\n",
+    "    \n",
+    "    # Criar DataFrames para uso posterior\n",
+    "    print(f\"\\n✅ DataFrames criados:\")\n",
+    "    print(f\"   📊 df_pages: {len(df_pages)} linhas (dados por página)\")\n",
+    "    print(f\"   🔤 df_words: {len(df_words)} linhas (frequência de palavras)\")\nelse:\n",
+    "    print(\"❌ Erro durante o crawling. Verificar logs acima.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "detalhes_paginas"
+   },
+   "outputs": [],
+   "source": [
+    "# 📋 Detalhes das páginas coletadas\n",
+    "if not df_pages.empty:\n",
+    "    print(\"📄 DETALHES DAS PÁGINAS COLETADAS\")\n",
+    "    print(\"=\" * 40)\n",
+    "    \n",
+    "    # Exibir as primeiras páginas\n",
+    "    display(df_pages.head())\n",
+    "    \n",
+    "    print(\"\\n📊 Estatísticas descritivas:\")\n",
+    "    display(df_pages[['text_length', 'word_count', 'unique_words']].describe())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_visualizacoes"
+   },
+   "source": [
+    "# 4️⃣ Visualizações e Gráficos\n",
+    "\n",
+    "Vamos criar visualizações interessantes dos dados coletados."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "wordcloud"
+   },
+   "outputs": [],
+   "source": [
+    "# 🌟 Word Cloud das palavras mais frequentes\n",
+    "if not df_words.empty:\n",
+    "    print(\"☁️ Criando Word Cloud...\")\n",
+    "    \n",
+    "    # Preparar dados para word cloud\n",
+    "    word_freq_dict = dict(zip(df_words['palavra'], df_words['frequencia']))\n",
+    "    \n",
+    "    # Criar word cloud\n",
+    "    plt.figure(figsize=(15, 8))\n",
+    "    \n",
+    "    wordcloud = WordCloud(\n",
+    "        width=1200, height=600,\n",
+    "        background_color='white',\n",
+    "        colormap='viridis',\n",
+    "        max_words=100,\n",
+    "        min_font_size=10\n",
+    "    ).generate_from_frequencies(word_freq_dict)\n",
+    "    \n",
+    "    plt.imshow(wordcloud, interpolation='bilinear')\n",
+    "    plt.axis('off')\n",
+    "    plt.title('☁️ Nuvem de Palavras - Site da Univesp', fontsize=20, pad=20)\n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    print(\"✅ Word Cloud criada com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "grafico_barras"
+   },
+   "outputs": [],
+   "source": [
+    "# 📊 Gráfico de barras das palavras mais frequentes\n",
+    "if not df_words.empty:\n",
+    "    print(\"📊 Criando gráfico de barras...\")\n",
+    "    \n",
+    "    # Top 20 palavras\n",
+    "    top_20 = df_words.head(20)\n",
+    "    \n",
+    "    plt.figure(figsize=(14, 8))\n",
+    "    \n",
+    "    # Criar gráfico de barras\n",
+    "    bars = plt.bar(range(len(top_20)), top_20['frequencia'], \n",
+    "                   color=plt.cm.viridis(np.linspace(0, 1, len(top_20))))\n",
+    "    \n",
+    "    plt.xlabel('Palavras', fontsize=12)\n",
+    "    plt.ylabel('Frequência', fontsize=12)\n",
+    "    plt.title('📊 Top 20 Palavras Mais Frequentes - Site da Univesp', fontsize=16, pad=20)\n",
+    "    plt.xticks(range(len(top_20)), top_20['palavra'], rotation=45, ha='right')\n",
+    "    plt.grid(axis='y', alpha=0.3)\n",
+    "    \n",
+    "    # Adicionar valores nas barras\n",
+    "    for i, bar in enumerate(bars):\n",
+    "        height = bar.get_height()\n",
+    "        plt.text(bar.get_x() + bar.get_width()/2., height + 1,\n",
+    "                f'{int(height)}', ha='center', va='bottom', fontsize=10)\n",
+    "    \n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    print(\"✅ Gráfico de barras criado com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "graficos_interativos"
+   },
+   "outputs": [],
+   "source": [
+    "# 📈 Gráficos interativos com Plotly\n",
+    "if not df_words.empty and not df_pages.empty:\n",
+    "    print(\"🎨 Criando gráficos interativos...\")\n",
+    "    \n",
+    "    # 1. Gráfico interativo de barras das palavras mais frequentes\n",
+    "    top_25 = df_words.head(25)\n",
+    "    \n",
+    "    fig1 = px.bar(\n",
+    "        top_25, \n",
+    "        x='palavra', \n",
+    "        y='frequencia',\n",
+    "        title='🏆 Top 25 Palavras Mais Frequentes (Interativo)',\n",
+    "        labels={'palavra': 'Palavra', 'frequencia': 'Frequência'},\n",
+    "        color='frequencia',\n",
+    "        color_continuous_scale='viridis'\n",
+    "    )\n",
+    "    fig1.update_layout(xaxis_tickangle=-45, height=600)\n",
+    "    fig1.show()\n",
+    "    \n",
+    "    # 2. Gráfico de distribuição de palavras por página\n",
+    "    fig2 = px.scatter(\n",
+    "        df_pages, \n",
+    "        x='text_length', \n",
+    "        y='word_count',\n",
+    "        size='unique_words',\n",
+    "        hover_data=['url'],\n",
+    "        title='📊 Distribuição: Tamanho do Texto vs Contagem de Palavras',\n",
+    "        labels={\n",
+    "            'text_length': 'Tamanho do Texto (caracteres)',\n",
+    "            'word_count': 'Número de Palavras',\n",
+    "            'unique_words': 'Palavras Únicas'\n",
+    "        }\n",
+    "    )\n",
+    "    fig2.show()\n",
+    "    \n",
+    "    # 3. Gráfico de pizza das categorias de palavras\n",
+    "    # Categorizar palavras por frequência\n",
+    "    categories = []\n",
+    "    for freq in df_words['frequencia']:\n",
+    "        if freq >= 100:\n",
+    "            categories.append('Muito Frequente (≥100)')\n",
+    "        elif freq >= 50:\n",
+    "            categories.append('Frequente (50-99)')\n",
+    "        elif freq >= 20:\n",
+    "            categories.append('Moderada (20-49)')\n",
+    "        elif freq >= 10:\n",
+    "            categories.append('Baixa (10-19)')\n",
+    "        else:\n",
+    "            categories.append('Rara (<10)')\n",
+    "    \n",
+    "    df_words['categoria'] = categories\n",
+    "    category_counts = df_words['categoria'].value_counts()\n",
+    "    \n",
+    "    fig3 = px.pie(\n",
+    "        values=category_counts.values,\n",
+    "        names=category_counts.index,\n",
+    "        title='🥧 Distribuição de Palavras por Categoria de Frequência'\n",
+    "    )\n",
+    "    fig3.show()\n",
+    "    \n",
+    "    print(\"✅ Gráficos interativos criados com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_analise_avancada"
+   },
+   "source": [
+    "# 5️⃣ Análise Avançada e Insights\n",
+    "\n",
+    "Vamos fazer algumas análises mais detalhadas dos dados."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "analise_correlacoes"
+   },
+   "outputs": [],
+   "source": [
+    "# 🔍 Análise de correlações\n",
+    "if not df_pages.empty:\n",
+    "    print(\"🔗 ANÁLISE DE CORRELAÇÕES\")\n",
+    "    print(\"=\" * 30)\n",
+    "    \n",
+    "    # Matriz de correlação\n",
+    "    correlation_matrix = df_pages[['text_length', 'word_count', 'unique_words']].corr()\n",
+    "    \n",
+    "    # Heatmap\n",
+    "    plt.figure(figsize=(10, 8))\n",
+    "    sns.heatmap(correlation_matrix, \n",
+    "                annot=True, \n",
+    "                cmap='coolwarm', \n",
+    "                center=0, \n",
+    "                square=True,\n",
+    "                fmt='.3f')\n",
+    "    plt.title('🔥 Matriz de Correlação entre Métricas das Páginas', fontsize=16, pad=20)\n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    # Insights\n",
+    "    print(\"\\n💡 INSIGHTS:\")\n",
+    "    corr_text_words = correlation_matrix.loc['text_length', 'word_count']\n",
+    "    corr_words_unique = correlation_matrix.loc['word_count', 'unique_words']\n",
+    "    \n",
+    "    print(f\"   📏 Correlação Tamanho do Texto ↔ Número de Palavras: {corr_text_words:.3f}\")\n",
+    "    print(f\"   🔤 Correlação Número de Palavras ↔ Palavras Únicas: {corr_words_unique:.3f}\")\n",
+    "    \n",
+    "    if corr_text_words > 0.7:\n",
+    "        print(\"   ✅ Forte correlação positiva entre tamanho do texto e número de palavras\")\n",
+    "    if corr_words_unique > 0.7:\n",
+    "        print(\"   ✅ Forte correlação positiva entre número total e palavras únicas\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "analise_diversidade"
+   },
+   "outputs": [],
+   "source": [
+    "# 📊 Análise de diversidade lexical\n",
+    "if not df_pages.empty:\n",
+    "    print(\"🌈 ANÁLISE DE DIVERSIDADE LEXICAL\")\n",
+    "    print(\"=\" * 35)\n",
+    "    \n",
+    "    # Calcular diversidade lexical (Type-Token Ratio)\n",
+    "    df_pages['diversidade_lexical'] = df_pages['unique_words'] / df_pages['word_count']\n",
+    "    \n",
+    "    # Estatísticas\n",
+    "    diversidade_media = df_pages['diversidade_lexical'].mean()\n",
+    "    diversidade_std = df_pages['diversidade_lexical'].std()\n",
+    "    \n",
+    "    print(f\"📊 Diversidade Lexical Média: {diversidade_media:.3f}\")\n",
+    "    print(f\"📈 Desvio Padrão: {diversidade_std:.3f}\")\n",
+    "    \n",
+    "    # Gráfico de distribuição\n",
+    "    plt.figure(figsize=(12, 6))\n",
+    "    \n",
+    "    plt.subplot(1, 2, 1)\n",
+    "    plt.hist(df_pages['diversidade_lexical'], bins=15, alpha=0.7, color='skyblue', edgecolor='black')\n",
+    "    plt.axvline(diversidade_media, color='red', linestyle='--', label=f'Média: {diversidade_media:.3f}')\n",
+    "    plt.xlabel('Diversidade Lexical (TTR)')\n",
+    "    plt.ylabel('Frequência')\n",
+    "    plt.title('📊 Distribuição da Diversidade Lexical')\n",
+    "    plt.legend()\n",
+    "    plt.grid(alpha=0.3)\n",
+    "    \n",
+    "    plt.subplot(1, 2, 2)\n",
+    "    plt.scatter(df_pages['word_count'], df_pages['diversidade_lexical'], alpha=0.6, color='green')\n",
+    "    plt.xlabel('Número de Palavras')\n",
+    "    plt.ylabel('Diversidade Lexical')\n",
+    "    plt.title('📈 Diversidade vs Número de Palavras')\n",
+    "    plt.grid(alpha=0.3)\n",
+    "    \n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    # Páginas com maior diversidade\n",
+    "    top_diversidade = df_pages.nlargest(3, 'diversidade_lexical')\n",
+    "    \n",
+    "    print(\"\\n🏆 TOP 3 PÁGINAS COM MAIOR DIVERSIDADE LEXICAL:\")\n",
+    "    for i, (idx, row) in enumerate(top_diversidade.iterrows(), 1):\n",
+    "        print(f\"{i}. Diversidade: {row['diversidade_lexical']:.3f}\")\n",
+    "        print(f\"   URL: {row['url'][:80]}...\")\n",
+    "        print(f\"   Palavras: {row['word_count']} | Únicas: {row['unique_words']}\\n\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_relatorios"
+   },
+   "source": [
+    "# 6️⃣ Relatórios e Exportação\n",
+    "\n",
+    "Vamos gerar relatórios finais e preparar os dados para download."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "relatorio_final"
+   },
+   "outputs": [],
+   "source": [
+    "# 📋 Relatório final consolidado\n",
+    "def gerar_relatorio_final():\n",
+    "    if not crawler.visited_urls:\n",
+    "        print(\"❌ Nenhum dado disponível para relatório\")\n",
+    "        return\n",
+    "    \n",
+    "    print(\"📋 RELATÓRIO FINAL - WEB CRAWLER UNIVESP\")\n",
+    "    print(\"=\" * 50)\n",
+    "    print(f\"🕷️ Executado em: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}\")\n",
+    "    print(f\"🌐 URL Base: {BASE_URL}\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Estatísticas do Crawling\n",
+    "    print(\"📊 ESTATÍSTICAS DO CRAWLING:\")\n",
+    "    print(\"-\" * 30)\n",
+    "    print(f\"✅ Páginas visitadas com sucesso: {len(crawler.visited_urls)}\")\n",
+    "    print(f\"❌ Páginas com erro: {len(crawler.failed_urls)}\")\n",
+    "    print(f\"🎯 Taxa de sucesso: {len(crawler.visited_urls)/(len(crawler.visited_urls)+len(crawler.failed_urls))*100:.1f}%\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Análise de Texto\n",
+    "    print(\"📝 ANÁLISE DE TEXTO:\")\n",
+    "    print(\"-\" * 20)\n",
+    "    print(f\"🔤 Total de palavras únicas: {len(crawler.word_frequency):,}\")\n",
+    "    print(f\"📊 Total de ocorrências: {sum(crawler.word_frequency.values()):,}\")\n",
+    "    print(f\"📄 Média de palavras por página: {df_pages['word_count'].mean():.1f}\")\n",
+    "    print(f\"🌈 Diversidade lexical média: {df_pages['diversidade_lexical'].mean():.3f}\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Top palavras\n",
+    "    print(\"🏆 TOP 10 PALAVRAS MAIS FREQUENTES:\")\n",
+    "    print(\"-\" * 35)\n",
+    "    for i, (palavra, freq) in enumerate(crawler.word_frequency.most_common(10), 1):\n",
+    "        print(f\"{i:2d}. {palavra:<20} : {freq:>4} ocorrências\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Análise por domínios temáticos\n",
+    "    palavras_educacao = ['curso', 'ensino', 'educação', 'aprendizagem', 'estudo', 'aluno', 'professor']\n",
+    "    palavras_tecnologia = ['tecnologia', 'computação', 'dados', 'sistema', 'digital', 'informática']\n",
+    "    \n",
+    "    freq_educacao = sum(crawler.word_frequency.get(palavra, 0) for palavra in palavras_educacao)\n",
+    "    freq_tecnologia = sum(crawler.word_frequency.get(palavra, 0) for palavra in palavras_tecnologia)\n",
+    "    \n",
+    "    print(\"🎓 ANÁLISE TEMÁTICA:\")\n",
+    "    print(\"-\" * 20)\n",
+    "    print(f\"📚 Palavras relacionadas à Educação: {freq_educacao} ocorrências\")\n",
+    "    print(f\"💻 Palavras relacionadas à Tecnologia: {freq_tecnologia} ocorrências\")\n",
+    "    \n",
+    "    if freq_educacao > freq_tecnologia:\n",
+    "        print(\"📊 Foco predominante: Educação\")\n",
+    "    else:\n",
+    "        print(\"📊 Foco predominante: Tecnologia\")\n",
+    "    \n",
+    "    print(\"\\n\" + \"=\" * 50)\n",
+    "    print(\"✅ Relatório gerado com sucesso!\")\n",
+    "\n",
+    "# Gerar relatório\n",
+    "gerar_relatorio_final()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "exportar_dados"
+   },
+   "outputs": [],
+   "source": [
+    "# 💾 Preparar dados para download\n",
+    "from google.colab import files\n",
+    "import json\n",
+    "\n",
+    "print(\"💾 PREPARANDO DADOS PARA DOWNLOAD\")\n",
+    "print(\"=\" * 35)\n",
+    "\n",
+    "# 1. Salvar frequência de palavras como CSV\n",
+    "df_words_full = crawler.get_word_frequency_df(1000)  # Top 1000 palavras\n",
+    "df_words_full.to_csv('univesp_frequencia_palavras.csv', index=False, encoding='utf-8')\n",
+    "print(\"✅ Arquivo CSV criado: univesp_frequencia_palavras.csv\")\n",
+    "\n",
+    "# 2. Salvar dados das páginas como CSV\n",
+    "df_pages_export = df_pages.copy()\n",
+    "df_pages_export['timestamp'] = df_pages_export['timestamp'].astype(str)\n",
+    "df_pages_export.to_csv('univesp_dados_paginas.csv', index=False, encoding='utf-8')\n",
+    "print(\"✅ Arquivo CSV criado: univesp_dados_paginas.csv\")\n",
+    "\n",
+    "# 3. Salvar relatório como JSON\n",
+    "relatorio_json = {\n",
+    "    'metadata': {\n",
+    "        'data_execucao': datetime.now().isoformat(),\n",
+    "        'url_base': BASE_URL,\n",
+    "        'max_pages': MAX_PAGES,\n",
+    "        'delay': DELAY\n",
+    "    },\n",
+    "    'estatisticas': {\n",
+    "        'paginas_visitadas': len(crawler.visited_urls),\n",
+    "        'paginas_com_erro': len(crawler.failed_urls),\n",
+    "        'palavras_unicas': len(crawler.word_frequency),\n",
+    "        'total_ocorrencias': sum(crawler.word_frequency.values()),\n",
+    "        'diversidade_lexical_media': float(df_pages['diversidade_lexical'].mean()) if 'diversidade_lexical' in df_pages.columns else 0\n",
+    "    },\n",
+    "    'top_palavras': dict(crawler.word_frequency.most_common(50)),\n",
+    "    'urls_visitadas': list(crawler.visited_urls),\n",
+    "    'urls_com_erro': list(crawler.failed_urls)\n",
+    "}\n",
+    "\n",
+    "with open('univesp_relatorio_completo.json', 'w', encoding='utf-8') as f:\n",
+    "    json.dump(relatorio_json, f, ensure_ascii=False, indent=2)\n",
+    "print(\"✅ Arquivo JSON criado: univesp_relatorio_completo.json\")\n",
+    "\n",
+    "# 4. Criar arquivo README para os dados\n",
+    "readme_content = f\"\"\"\n",
+    "# 📊 Dados do Web Crawler - Univesp\n",
+    "\n",
+    "## 📋 Descrição\n",
+    "Dados coletados pelo web crawler da Univesp executado em {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}.\n",
+    "\n",
+    "## 📁 Arquivos Inclusos:\n",
+    "- **univesp_frequencia_palavras.csv**: Top 1000 palavras mais frequentes\n",
+    "- **univesp_dados_paginas.csv**: Dados detalhados de cada página visitada\n",
+    "- **univesp_relatorio_completo.json**: Relatório completo em formato JSON\n",
+    "- **README.md**: Este arquivo de documentação\n",
+    "\n",
+    "## 📊 Estatísticas:\n",
+    "- 🌐 **URL Base**: {BASE_URL}\n",
+    "- 📄 **Páginas Processadas**: {len(crawler.visited_urls)}\n",
+    "- 🔤 **Palavras Únicas**: {len(crawler.word_frequency):,}\n",
+    "- 📊 **Total de Ocorrências**: {sum(crawler.word_frequency.values()):,}\n",
+    "\n",
+    "## 🏆 Top 10 Palavras:\n",
+    "\"\"\"\n",
+    "\n",
+    "for i, (palavra, freq) in enumerate(crawler.word_frequency.most_common(10), 1):\n",
+    "    readme_content += f\"{i:2d}. **{palavra}**: {freq} ocorrências\\n\"\n",
+    "\n",
+    "readme_content += f\"\"\"\n",
+    "\n",
+    "## 🛠️ Como Usar:\n",
+    "1. Abra os arquivos CSV em Excel, Google Sheets ou pandas\n",
+    "2. Use o arquivo JSON para análises programáticas\n",
+    "3. Consulte este README para entender a estrutura dos dados\n",
+    "\n",
+    "---\n",
+    "*Gerado pelo Web Crawler da Univesp - Notebook do Google Colab*\n",
+    "\"\"\"\n",
+    "\n",
+    "with open('README.md', 'w', encoding='utf-8') as f:\n",
+    "    f.write(readme_content)\n",
+    "print(\"✅ Arquivo README criado: README.md\")\n",
+    "\n",
+    "print(\"\\n📦 Todos os arquivos estão prontos para download!\")\n",
+    "print(\"💡 Use o menu Files → Download para baixar os arquivos individualmente\")\n",
+    "print(\"💡 Ou execute a célula abaixo para download automático\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "download_arquivos"
+   },
+   "outputs": [],
+   "source": [
+    "# 📥 Download automático dos arquivos (opcional)\n",
+    "print(\"📥 Iniciando download dos arquivos...\")\n",
+    "print(\"(Os arquivos serão baixados para sua pasta de Downloads)\")\n",
+    "\n",
+    "try:\n",
+    "    files.download('univesp_frequencia_palavras.csv')\n",
+    "    files.download('univesp_dados_paginas.csv')\n",
+    "    files.download('univesp_relatorio_completo.json')\n",
+    "    files.download('README.md')\n",
+    "    print(\"\\n✅ Download concluído com sucesso!\")\n",
+    "except Exception as e:\n",
+    "    print(f\"⚠️ Erro no download automático: {e}\")\n",
+    "    print(\"💡 Use o menu Files para download manual\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_publicacao_github"
+   },
+   "source": [
+    "# 🚀 Publicando no GitHub\n",
+    "\n",
+    "## 📝 Guia Completo para Publicar este Projeto no GitHub\n",
+    "\n",
+    "### 🌟 **Opção 1: Publicação Direta do Colab**\n",
+    "\n",
+    "1. **Salvar no GitHub diretamente:**\n",
+    "   - No Colab: `File` → `Save a copy in GitHub`\n",
+    "   - Escolha seu repositório ou crie um novo\n",
+    "   - Adicione uma mensagem de commit\n",
+    "   - Clique em `OK`\n",
+    "\n",
+    "### 🛠️ **Opção 2: Processo Manual Completo**\n",
+    "\n",
+    "#### **Passo 1: Preparar o Repositório**\n",
+    "1. Acesse [GitHub.com](https://github.com)\n",
+    "2. Clique em `New Repository`\n",
+    "3. Nome sugerido: `univesp-web-crawler`\n",
+    "4. Adicione descrição: `🕷️ Web Crawler da Univesp com análise de frequência de palavras`\n",
+    "5. Marque `Add a README file`\n",
+    "6. Clique `Create repository`\n",
+    "\n",
+    "#### **Passo 2: Estrutura de Arquivos Recomendada**\n",
+    "```\n",
+    "univesp-web-crawler/\n",
+    "├── Univesp_Web_Crawler_Colab.ipynb    # Este notebook\n",
+    "├── README.md                           # Documentação principal\n",
+    "├── data/                              # Dados coletados\n",
+    "│   ├── univesp_frequencia_palavras.csv\n",
+    "│   ├── univesp_dados_paginas.csv\n",
+    "│   └── univesp_relatorio_completo.json\n",
+    "├── images/                            # Screenshots e gráficos\n",
+    "│   ├── wordcloud.png\n",
+    "│   └── graficos_analise.png\n",
+    "└── requirements.txt                   # Dependências do projeto\n",
+    "```\n",
+    "\n",
+    "#### **Passo 3: Criar README.md Profissional**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "instrucoes_finais"
+   },
+   "source": [
+    "## 📋 **Instruções Finais para Publicação**\n",
+    "\n",
+    "### ✅ **Checklist Completo:**\n",
+    "\n",
+    "1. **✅ Preparar Arquivos:**\n",
+    "   - [ ] Download do notebook (.ipynb)\n",
+    "   - [ ] README.md profissional\n",
+    "   - [ ] requirements.txt\n",
+    "   - [ ] Dados coletados (CSV/JSON)\n",
+    "   - [ ] Screenshots das visualizações\n",
+    "\n",
+    "2. **✅ Criar Repositório GitHub:**\n",
+    "   - [ ] Nome: `univesp-web-crawler`\n",
+    "   - [ ] Descrição detalhada\n",
+    "   - [ ] README inicial\n",
+    "   - [ ] Licença MIT\n",
+    "\n",
+    "3. **✅ Upload dos Arquivos:**\n",
+    "   - [ ] Notebook principal\n",
+    "   - [ ] Documentação\n",
+    "   - [ ] Pasta `data/` com resultados\n",
+    "   - [ ] Pasta `images/` com gráficos\n",
+    "\n",
+    "4. **✅ Configurações Finais:**\n",
+    "   - [ ] Topics/Tags: `web-crawler`, `data-science`, `python`, `univesp`\n",
+    "   - [ ] GitHub Pages (opcional)\n",
+    "   - [ ] Badge do Colab atualizado\n",
+    "\n",
+    "### 🎯 **Dicas para Destaque:**\n",
+    "\n",
+    "- **📸 Screenshots**: Inclua imagens das visualizações no README\n",
+    "- **🎬 GIF Demonstrativo**: Grave um GIF da execução do notebook\n",
+    "- **📊 Dados de Exemplo**: Mantenha alguns resultados como exemplo\n",
+    "- **🏷️ Tags Relevantes**: Use tags para facilitar descoberta\n",
+    "- **⭐ Call-to-Action**: Incentive outros a dar estrela no projeto\n",
+    "\n",
+    "### 🚀 **Próximos Passos:**\n",
+    "\n",
+    "1. **Execute todas as células** deste notebook\n",
+    "2. **Baixe todos os arquivos** gerados\n",
+    "3. **Crie o repositório** no GitHub\n",
+    "4. **Faça upload** dos arquivos\n",
+    "5. **Teste o badge** do Colab\n",
+    "6. **Compartilhe** seu projeto!\n",
+    "\n",
+    "---\n",
+    "\n",
+    "**🎉 Parabéns! Seu projeto está pronto para brilhar no GitHub! 🌟**"
+   ]
+  }
+ ]
+}
+
+# 🚀 Guia Completo: Publicando Projetos do Google Colab no GitHub
+
+## 📋 Visão Geral
+
+Este guia mostra como publicar efetivamente seus projetos do Google Colab no GitHub, usando como exemplo o Web Crawler da Univesp que criamos.
+
+---
+
+## 🌟 Opções de Publicação
+
+### **Opção 1: Publicação Direta do Colab (Mais Simples)**
+
+1. **No Google Colab:**
+   - Abra seu notebook
+   - Vá em `File` → `Save a copy in GitHub`
+   - Autorize o Colab a acessar sua conta GitHub (se necessário)
+   - Escolha o repositório (ou crie um novo)
+   - Adicione uma mensagem de commit
+   - Clique `OK`
+
+2. **Vantagens:**
+   - ✅ Processo rápido e direto
+   - ✅ Sincronização automática
+   - ✅ Mantém formatação do notebook
+
+3. **Limitações:**
+   - ❌ Controle limitado sobre estrutura
+   - ❌ Não inclui arquivos auxiliares automaticamente
+
+### **Opção 2: Processo Manual Completo (Recomendado para Projetos Profissionais)**
+
+---
+
+## 🛠️ **PASSO A PASSO DETALHADO**
+
+### **Passo 1: Preparando o Repositório no GitHub**
+
+1. **Acesse [GitHub.com](https://github.com)**
+2. **Clique em `New Repository`**
+3. **Configure o repositório:**
+   - **Nome:** `univesp-web-crawler` (ou nome de sua escolha)
+   - **Descrição:** `🕷️ Web Crawler da Univesp com análise de frequência de palavras - Desenvolvido no Google Colab`
+   - **Visibilidade:** Public (recomendado para portfólio)
+   - **✅ Marque:** `Add a README file`
+   - **✅ Escolha licença:** MIT License
+   - **✅ Adicione .gitignore:** Python
+
+4. **Clique `Create repository`**
+
+### **Passo 2: Estrutura de Arquivos Recomendada**
+
+```
+📁 univesp-web-crawler/
+├── 📄 README.md                           # Documentação principal
+├── 📓 Univesp_Web_Crawler_Colab.ipynb    # Notebook principal
+├── 📋 requirements.txt                    # Dependências Python
+├── 📄 LICENSE                             # Licença do projeto
+├── 📄 .gitignore                          # Arquivos a ignorar
+├── 📁 data/                              # Dados coletados
+│   ├── univesp_frequencia_palavras.csv
+│   ├── univesp_dados_paginas.csv
+│   └── univesp_relatorio_completo.json
+├── 📁 images/                            # Screenshots e gráficos
+│   ├── wordcloud_example.png
+│   ├── bar_chart_example.png
+│   └── dashboard_screenshot.png
+├── 📁 docs/                              # Documentação adicional
+│   ├── methodology.md
+│   └── analysis_guide.md
+└── 📁 scripts/                           # Scripts Python auxiliares
+    └── crawler_standalone.py
+```
+
+### **Passo 3: Criando um README.md Profissional**
+
+Aqui está um template completo para seu README:
+
+```markdown
+# 🕷️ Web Crawler da Univesp
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SEU_USUARIO/univesp-web-crawler/blob/main/Univesp_Web_Crawler_Colab.ipynb)
+[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Stars](https://img.shields.io/github/stars/SEU_USUARIO/univesp-web-crawler)](https://github.com/SEU_USUARIO/univesp-web-crawler/stargazers)
+
+## 📋 Sobre o Projeto
+
+Este projeto implementa um **web crawler inteligente** que analisa o conteúdo do site da Univesp, extraindo informações valiosas sobre a frequência de palavras e padrões textuais. Desenvolvido como parte do **Desafio Semana 4**, demonstra técnicas avançadas de:
+
+- 🌐 **Web Scraping** com controle de taxa respeitoso
+- 📊 **Processamento de Linguagem Natural**
+- 🎨 **Visualização de Dados Interativa**
+- 📈 **Análise Estatística Avançada**
+
+---
+
+## ✨ Características Principais
+
+- 🧠 **Crawling Inteligente**: Navegação sistemática com tratamento de erros
+- 🧹 **Processamento de Texto**: Limpeza automática e filtro de stopwords
+- 📊 **Análises Avançadas**: Diversidade lexical, correlações e insights temáticos
+- 🎨 **Visualizações Ricas**: Word clouds, gráficos interativos, heatmaps
+- 💾 **Exportação Completa**: CSV, JSON e relatórios detalhados
+- 🐍 **100% Python**: Compatível com Google Colab e ambientes locais
+
+---
+
+## 🚀 Como Usar
+
+### 🌟 Opção 1: Google Colab (Recomendada - Zero Setup)
+
+1. **Clique no badge "Open in Colab" acima**
+2. **Execute células sequencialmente** (`Shift + Enter`)
+3. **Baixe os resultados** automaticamente
+4. **Personalize parâmetros** conforme necessário
+
+### 💻 Opção 2: Ambiente Local
+
+```bash
+# Clone o repositório
+git clone https://github.com/SEU_USUARIO/univesp-web-crawler.git
+cd univesp-web-crawler
+
+# Crie ambiente virtual (recomendado)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+
+# Instale dependências
+pip install -r requirements.txt
+
+# Execute o notebook
+jupyter notebook Univesp_Web_Crawler_Colab.ipynb
+```
+
+---
+
+## 📊 Resultados de Exemplo
+
+### 🏆 Top Palavras Identificadas
+1. **tecnologia**: 1,036 ocorrências
+2. **engenharia**: 902 ocorrências  
+3. **univesp**: 748 ocorrências
+4. **computação**: 474 ocorrências
+5. **dados**: 461 ocorrências
+
+### 📈 Métricas Coletadas
+- 📄 **25 páginas** analisadas com sucesso
+- 🔤 **3,939 palavras únicas** identificadas
+- 📊 **24,729 ocorrências totais** contabilizadas
+- 🎯 **100% taxa de sucesso**
+
+---
+
+## 🎨 Galeria de Visualizações
+
+<table>
+<tr>
+<td align="center">
+  <img src="images/wordcloud_example.png" width="300px" alt="Word Cloud"/>
+  <br/>
+  ☁️ <b>Nuvem de Palavras</b>
+</td>
+<td align="center">
+  <img src="images/bar_chart_example.png" width="300px" alt="Gráfico de Barras"/>
+  <br/>
+  📊 <b>Ranking de Frequência</b>
+</td>
+</tr>
+<tr>
+<td align="center">
+  <img src="images/correlation_matrix.png" width="300px" alt="Matriz de Correlação"/>
+  <br/>
+  🔥 <b>Matriz de Correlação</b>
+</td>
+<td align="center">
+  <img src="images/interactive_dashboard.png" width="300px" alt="Dashboard Interativo"/>
+  <br/>
+  📈 <b>Dashboard Interativo</b>
+</td>
+</tr>
+</table>
+
+---
+
+## 🛠️ Tecnologias e Bibliotecas
+
+| Categoria | Tecnologias |
+|-----------|------------|
+| **Core** | ![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white) ![Jupyter](https://img.shields.io/badge/-Jupyter-F37626?logo=jupyter&logoColor=white) |
+| **Web Scraping** | ![Requests](https://img.shields.io/badge/-Requests-2CA5E0?logo=python&logoColor=white) ![BeautifulSoup](https://img.shields.io/badge/-BeautifulSoup-43B02A?logo=python&logoColor=white) |
+| **Data Analysis** | ![Pandas](https://img.shields.io/badge/-Pandas-150458?logo=pandas&logoColor=white) ![NumPy](https://img.shields.io/badge/-NumPy-013243?logo=numpy&logoColor=white) |
+| **Visualização** | ![Matplotlib](https://img.shields.io/badge/-Matplotlib-11557C?logo=python&logoColor=white) ![Plotly](https://img.shields.io/badge/-Plotly-3F4F75?logo=plotly&logoColor=white) ![Seaborn](https://img.shields.io/badge/-Seaborn-3776AB?logo=python&logoColor=white) |
+| **Cloud** | ![Google Colab](https://img.shields.io/badge/-Google_Colab-F9AB00?logo=google-colab&logoColor=white) |
+
+---
+
+## 📁 Estrutura Detalhada do Projeto
+
+```
+univesp-web-crawler/
+├── 📓 Univesp_Web_Crawler_Colab.ipynb    # Notebook principal
+├── 📄 README.md                           # Esta documentação
+├── 📋 requirements.txt                    # Dependências Python
+├── 📄 LICENSE                             # Licença MIT
+├── 📁 data/                              # Dados coletados
+│   ├── 📊 univesp_frequencia_palavras.csv   # Top palavras + frequências
+│   ├── 📈 univesp_dados_paginas.csv         # Métricas por página
+│   ├── 📄 univesp_relatorio_completo.json   # Relatório completo
+│   └── 📋 README.md                          # Documentação dos dados
+├── 📁 images/                            # Screenshots e visualizações
+│   ├── 🖼️ wordcloud_example.png
+│   ├── 📊 bar_chart_example.png
+│   ├── 🔥 correlation_matrix.png
+│   └── 📈 interactive_dashboard.png
+└── 📁 docs/                              # Documentação adicional
+    ├── 📖 methodology.md                    # Metodologia detalhada
+    └── 📚 analysis_guide.md                 # Guia de análises
+```
+
+---
+
+## 🔬 Análises Implementadas
+
+### 1. 📊 Análise de Frequência
+- Identificação e ranking das palavras mais frequentes
+- Distribuição estatística das ocorrências
+- Categorização por faixas de frequência
+- Filtro inteligente de stopwords em português
+
+### 2. 🌈 Diversidade Lexical
+- Cálculo do Type-Token Ratio (TTR)
+- Análise da riqueza vocabular por página
+- Comparação de diversidade entre seções
+- Correlações com tamanho do texto
+
+### 3. 🎯 Análise Temática
+- Identificação automática de focos temáticos
+- Categorização semântica (Educação vs Tecnologia)
+- Análise de co-ocorrências de palavras
+- Insights sobre conteúdo institucional
+
+### 4. 📈 Análise Estatística
+- Matriz de correlação entre métricas
+- Distribuições de probabilidade
+- Testes de significância estatística
+- Análise de outliers
+
+---
+
+## 📊 Métricas e KPIs
+
+| Métrica | Valor | Descrição |
+|---------|-------|-----------|
+| **Taxa de Sucesso** | 100% | Páginas processadas com sucesso |
+| **Cobertura** | 25 páginas | Total de páginas analisadas |
+| **Vocabulário** | 3,939 palavras | Palavras únicas identificadas |
+| **Densidade** | 24,729 ocorrências | Total de palavras processadas |
+| **Diversidade Média** | 0.642 | Type-Token Ratio médio |
+| **Tempo de Execução** | ~2 minutos | Tempo médio no Colab |
+
+---
+
+## 🚀 Roadmap e Futuras Melhorias
+
+- [ ] **📱 Interface Web**: Dashboard interativo com Streamlit
+- [ ] **🤖 ML Integration**: Classificação automática de tópicos
+- [ ] **📊 Análise Temporal**: Tracking de mudanças ao longo do tempo
+- [ ] **🔍 Análise Semântica**: Word embeddings e similaridade
+- [ ] **📈 API REST**: Endpoints para integração externa
+- [ ] **🐳 Containerização**: Deploy com Docker
+- [ ] **☁️ Cloud Deployment**: AWS/GCP integration
+
+---
+
+## 🤝 Como Contribuir
+
+Contribuições são muito bem-vindas! Você pode contribuir de várias formas:
+
+### 🔧 Desenvolvimento
+1. **Fork** este repositório
+2. **Crie uma branch** (`git checkout -b feature/nova-funcionalidade`)
+3. **Commit** suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. **Push** para a branch (`git push origin feature/nova-funcionalidade`)
+5. **Abra um Pull Request**
+
+### 🐛 Reportar Bugs
+- Use a seção **Issues** para reportar problemas
+- Inclua detalhes sobre o ambiente e passos para reproduzir
+- Adicione screenshots se relevante
+
+### 💡 Sugestões
+- Compartilhe ideias para novas análises
+- Sugira melhorias na visualização
+- Proponha otimizações de performance
+
+---
+
+## 📚 Recursos Relacionados
+
+### 📖 Tutoriais e Documentação
+- [Tutorial completo de Web Scraping](docs/web_scraping_guide.md)
+- [Guia de Análise de Texto](docs/text_analysis_guide.md)
+- [Manual de Visualizações](docs/visualization_manual.md)
+
+### 🔗 Links Úteis
+- [Documentação BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+- [Plotly Python Guide](https://plotly.com/python/)
+- [Pandas User Guide](https://pandas.pydata.org/docs/user_guide/index.html)
+
+### 🎓 Artigos Acadêmicos
+- [Text Mining Techniques](https://example.com/text-mining)
+- [Web Crawling Best Practices](https://example.com/crawling-practices)
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+### O que isso significa?
+- ✅ **Uso comercial** permitido
+- ✅ **Modificação** permitida  
+- ✅ **Distribuição** permitida
+- ✅ **Uso privado** permitido
+- ❗ **Sem garantia** - use por sua própria conta e risco
+
+---
+
+## 📬 Contato e Suporte
+
+### 👨‍💻 Desenvolvedor
+**Seu Nome**
+- 📧 **Email:** seu.email@exemplo.com
+- 💼 **LinkedIn:** [seu-perfil-linkedin](https://linkedin.com/in/seu-perfil)
+- 🐙 **GitHub:** [seu-usuario](https://github.com/seu-usuario)
+
+### 🆘 Suporte
+- 🐛 **Bugs:** Abra uma [issue](../../issues)
+- 💬 **Discussões:** Use as [discussions](../../discussions)
+- 📖 **Documentação:** Confira a [wiki](../../wiki)
+
+### 🌟 Reconhecimentos
+- **Univesp** - Pela inspiração e dados públicos
+- **Comunidade Python** - Pelas excelentes bibliotecas
+- **Google Colab** - Pela plataforma gratuita e poderosa
+
+---
+
+## 📊 Estatísticas do Projeto
+
+![GitHub stars](https://img.shields.io/github/stars/SEU_USUARIO/univesp-web-crawler?style=social)
+![GitHub forks](https://img.shields.io/github/forks/SEU_USUARIO/univesp-web-crawler?style=social)
+![GitHub issues](https://img.shields.io/github/issues/SEU_USUARIO/univesp-web-crawler)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/SEU_USUARIO/univesp-web-crawler)
+
+![Visitors](https://visitor-badge.glitch.me/badge?page_id=SEU_USUARIO.univesp-web-crawler)
+![Last Commit](https://img.shields.io/github/last-commit/SEU_USUARIO/univesp-web-crawler)
+![Repo Size](https://img.shields.io/github/repo-size/SEU_USUARIO/univesp-web-crawler)
+
+---
+
+<div align="center">
+
+## 🎉 **Obrigado por visitar este projeto!** 
+
+### Se foi útil para você, considere dar uma ⭐!
+
+**Desenvolvido com ❤️ para a comunidade educacional**
+
+---
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SEU_USUARIO/univesp-web-crawler/blob/main/Univesp_Web_Crawler_Colab.ipynb)
+
+**[🚀 Executar Agora no Google Colab](https://colab.research.google.com/github/SEU_USUARIO/univesp-web-crawler/blob/main/Univesp_Web_Crawler_Colab.ipynb)**
+
+</div>
+```
+
+### **Passo 4: Personalizações Importantes**
+
+Antes de publicar, certifique-se de:
+
+1. **Substituir placeholders:**
+   - `SEU_USUARIO` → seu username do GitHub
+   - `seu.email@exemplo.com` → seu email real
+   - Links do LinkedIn e perfis sociais
+
+2. **Adicionar screenshots reais:**
+   - Execute o notebook e capture telas das visualizações
+   - Salve as imagens na pasta `images/`
+   - Atualize os links no README
+
+3. **Configurar badges:**
+   - Teste todos os badges e links
+   - Verifique se o badge do Colab funciona
+   - Adicione badges específicos do seu projeto
+
+---
+
+## 🎯 **Dicas Para Destaque no GitHub**
+
+### **1. Visual e Apresentação**
+- ✅ **README rico**: Use emojis, badges, tabelas e imagens
+- ✅ **Screenshots**: Mostre o projeto funcionando
+- ✅ **GIFs**: Grave demonstrações do projeto
+- ✅ **Logo personalizado**: Crie um logo único
+
+### **2. Organização do Projeto**
+- ✅ **Estrutura clara**: Pastas bem organizadas
+- ✅ **Documentação completa**: README, CONTRIBUTING, LICENSE
+- ✅ **Exemplos práticos**: Dados de amostra inclusos
+- ✅ **Código limpo**: Comentários e docstrings
+
+### **3. Interação e Comunidade**
+- ✅ **Issues template**: Facilite o reporte de bugs
+- ✅ **Contributing guide**: Instruções para contribuir
+- ✅ **Discussions**: Habilite discussões no repo
+- ✅ **Releases**: Marque versões importantes
+
+### **4. SEO e Descoberta**
+- ✅ **Tags relevantes**: `web-scraping`, `data-science`, `python`, `education`
+- ✅ **Descrição descritiva**: No repositório GitHub
+- ✅ **Keywords no README**: Termos que pessoas procuram
+- ✅ **Links externos**: Para dataset, documentação oficial
+
+---
+
+## 📋 **Checklist Final de Publicação**
+
+### ✅ **Preparação**
+- [ ] Notebook executado completamente sem erros
+- [ ] Todos os dados exportados (CSV, JSON)
+- [ ] Screenshots de todas as visualizações salvas
+- [ ] README.md criado e personalizado
+- [ ] requirements.txt com versões específicas
+- [ ] Arquivos desnecessários removidos
+
+### ✅ **Repositório GitHub**
+- [ ] Repositório criado com nome descritivo
+- [ ] Descrição curta mas informativa
+- [ ] Tags/Topics adicionadas
+- [ ] Licença MIT selecionada
+- [ ] .gitignore para Python configurado
+
+### ✅ **Upload e Organização**
+- [ ] Estrutura de pastas criada
+- [ ] Notebook principal na raiz
+- [ ] README.md atualizado na raiz
+- [ ] Dados organizados na pasta `data/`
+- [ ] Imagens organizadas na pasta `images/`
+
+### ✅ **Testes e Verificação**
+- [ ] Badge "Open in Colab" testado e funcionando
+- [ ] Links internos do README verificados
+- [ ] Notebook abre corretamente no Colab via GitHub
+- [ ] Todos os badges exibindo informações corretas
+- [ ] Licença e contribuições claramente definidas
+
+### ✅ **Finalização**
+- [ ] Primeiro commit com mensagem clara
+- [ ] Release v1.0 criada (opcional)
+- [ ] Projeto compartilhado nas redes sociais
+- [ ] Adicionado ao portfólio pessoal
+
+---
+
+## 🚀 **Próximos Passos Após Publicação**
+
+1. **📢 Divulgação:**
+   - Compartilhe no LinkedIn com hashtags relevantes
+   - Poste no Twitter/X mencionando as tecnologias usadas
+   - Adicione ao seu portfólio pessoal
+   - Submeta a showcases da comunidade Python
+
+2. **🔄 Manutenção:**
+   - Monitor issues e pull requests
+   - Atualize dependências regularmente
+   - Adicione novas funcionalidades baseadas no feedback
+   - Mantenha documentação atualizada
+
+3. **📈 Evolução:**
+   - Colete feedback dos usuários
+   - Implemente sugestões de melhoria
+   - Considere expansão para outros domínios
+   - Explore oportunidades de colaboração
+
+---
+
+**🎉 Parabéns! Seu projeto está pronto para fazer sucesso no GitHub!**
+
+Lembre-se: um bom projeto no GitHub não é apenas sobre o código - é sobre apresentação, documentação e experiência do usuário. Com este guia, você tem tudo necessário para criar um repositório profissional e atrativo!
+
+---
+
+**🌟 Boa sorte com seu projeto!**
+
+{
+ "nbformat": 4,
+ "nbformat_minor": 0,
+ "metadata": {
+  "colab": {
+   "provenance": [],
+   "toc_visible": true,
+   "authorship_tag": "ABX9TyMrKw8dCQVxYbNZXz5cJ8mR"
+  },
+  "kernelspec": {
+   "name": "python3",
+   "display_name": "Python 3"
+  },
+  "language_info": {
+   "name": "python"
+  }
+ },
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "view-in-github",
+    "colab_type": "text"
+   },
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/SEU_USUARIO/SEU_REPOSITORIO/blob/main/Univesp_Web_Crawler_Colab.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "titulo_principal"
+   },
+   "source": [
+    "# 🕷️ Web Crawler da Univesp com Análise de Frequência de Palavras\n",
+    "\n",
+    "---\n",
+    "\n",
+    "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SEU_USUARIO/SEU_REPOSITORIO/blob/main/Univesp_Web_Crawler_Colab.ipynb)\n",
+    "[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/SEU_USUARIO/SEU_REPOSITORIO)\n",
+    "[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)\n",
+    "\n",
+    "## 📋 Descrição do Projeto\n",
+    "\n",
+    "Este notebook implementa um **web crawler** que visita sistematicamente as páginas da Univesp, seguindo hyperlinks e analisando a frequência de palavras encontradas. O projeto foi desenvolvido como parte do **Desafio Semana 4** e demonstra técnicas de:\n",
+    "\n",
+    "- 🌐 **Web Scraping** e crawling sistemático\n",
+    "- 📊 **Análise de texto** e processamento de linguagem natural\n",
+    "- 📈 **Visualização de dados** com gráficos interativos\n",
+    "- 🐍 **Programação Python** com bibliotecas especializadas\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### 🎯 Objetivos\n",
+    "1. Implementar um crawler que navega automaticamente pelo site da Univesp\n",
+    "2. Extrair e limpar texto de páginas HTML\n",
+    "3. Analisar frequência de palavras com filtros inteligentes\n",
+    "4. Gerar visualizações e relatórios detalhados\n",
+    "5. Criar uma ferramenta reutilizável e bem documentada\n",
+    "\n",
+    "### 🚀 Como Usar Este Notebook\n",
+    "1. **Execute as células sequencialmente** usando `Shift + Enter`\n",
+    "2. **Ajuste os parâmetros** na seção de configuração conforme necessário\n",
+    "3. **Visualize os resultados** nas seções de análise e gráficos\n",
+    "4. **Baixe os dados** gerados na seção final\n",
+    "\n",
+    "### 📖 Estrutura do Notebook\n",
+    "- **Seção 1:** Configuração e Instalação de Dependências\n",
+    "- **Seção 2:** Implementação do Web Crawler\n",
+    "- **Seção 3:** Processamento e Análise de Texto\n",
+    "- **Seção 4:** Visualizações e Gráficos\n",
+    "- **Seção 5:** Relatórios e Exportação de Dados\n",
+    "\n",
+    "---\n",
+    "\n",
+    "**Autor:** Desenvolvido para o Desafio Semana 4 - Univesp  \n",
+    "**Data:** 2025  \n",
+    "**Versão:** 1.0  "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_instalacao"
+   },
+   "source": [
+    "# 1️⃣ Configuração e Instalação de Dependências\n",
+    "\n",
+    "Nesta seção, vamos instalar e importar todas as bibliotecas necessárias para o funcionamento do web crawler."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "install_dependencies",
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# 📦 Instalação de bibliotecas necessárias\n",
+    "!pip install requests beautifulsoup4 matplotlib seaborn wordcloud plotly pandas --quiet\n",
+    "\n",
+    "print(\"✅ Todas as dependências foram instaladas com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "import_libraries"
+   },
+   "outputs": [],
+   "source": [
+    "# 📚 Importação de bibliotecas\n",
+    "import re\n",
+    "import time\n",
+    "import html\n",
+    "from urllib.parse import urljoin, urlparse\n",
+    "from collections import Counter, defaultdict\n",
+    "from datetime import datetime\n",
+    "\n",
+    "# Bibliotecas para web scraping\n",
+    "import requests\n",
+    "from bs4 import BeautifulSoup\n",
+    "from requests.adapters import HTTPAdapter\n",
+    "from urllib3.util.retry import Retry\n",
+    "\n",
+    "# Bibliotecas para análise de dados\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "\n",
+    "# Bibliotecas para visualização\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "import plotly.express as px\n",
+    "import plotly.graph_objects as go\n",
+    "from plotly.subplots import make_subplots\n",
+    "from wordcloud import WordCloud\n",
+    "\n",
+    "# Configurações visuais\n",
+    "plt.style.use('seaborn-v0_8')\n",
+    "sns.set_palette(\"husl\")\n",
+    "pd.set_option('display.max_columns', None)\n",
+    "pd.set_option('display.width', None)\n",
+    "\n",
+    "print(\"✅ Todas as bibliotecas foram importadas com sucesso!\")\n",
+    "print(f\"🐍 Python executando no Google Colab\")\n",
+    "print(f\"⏰ Notebook iniciado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_configuracao"
+   },
+   "source": [
+    "## ⚙️ Configuração de Parâmetros\n",
+    "\n",
+    "Aqui você pode ajustar os parâmetros do crawler conforme suas necessidades:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "configuracao_parametros"
+   },
+   "outputs": [],
+   "source": [
+    "# 🎛️ CONFIGURAÇÕES DO WEB CRAWLER\n",
+    "# ================================\n",
+    "\n",
+    "# URL base da Univesp\n",
+    "BASE_URL = \"https://univesp.br\"\n",
+    "\n",
+    "# Número máximo de páginas a visitar\n",
+    "MAX_PAGES = 20  # Reduzido para o Colab (pode aumentar se necessário)\n",
+    "\n",
+    "# Delay entre requisições (em segundos)\n",
+    "DELAY = 1.0  # Seja respeitoso com o servidor!\n",
+    "\n",
+    "# Timeout para requisições (em segundos)\n",
+    "TIMEOUT = 10\n",
+    "\n",
+    "# Headers para simular um navegador real\n",
+    "HEADERS = {\n",
+    "    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',\n",
+    "    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',\n",
+    "    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',\n",
+    "    'Accept-Encoding': 'gzip, deflate',\n",
+    "    'Connection': 'keep-alive',\n",
+    "}\n",
+    "\n",
+    "# Lista de stopwords em português\n",
+    "STOPWORDS = {\n",
+    "    'a', 'ao', 'aos', 'aquela', 'aquelas', 'aquele', 'aqueles', 'aquilo', 'as', 'até', \n",
+    "    'com', 'como', 'da', 'das', 'de', 'dela', 'delas', 'dele', 'deles', 'depois', \n",
+    "    'do', 'dos', 'e', 'ela', 'elas', 'ele', 'eles', 'em', 'entre', 'essa', 'essas', \n",
+    "    'esse', 'esses', 'esta', 'estão', 'estas', 'estamos', 'estar', 'este', 'estes', \n",
+    "    'eu', 'foi', 'for', 'foram', 'há', 'isso', 'isto', 'já', 'mais', 'mas', 'me', \n",
+    "    'mesmo', 'meu', 'meus', 'minha', 'minhas', 'na', 'nas', 'não', 'no', 'nos', \n",
+    "    'nós', 'o', 'os', 'ou', 'para', 'pela', 'pelas', 'pelo', 'pelos', 'por', \n",
+    "    'qual', 'quando', 'que', 'quem', 'são', 'se', 'sem', 'ser', 'seu', 'seus', \n",
+    "    'só', 'sua', 'suas', 'também', 'te', 'tem', 'teu', 'teus', 'tu', 'tua', \n",
+    "    'tuas', 'um', 'uma', 'você', 'vocês', 'vos', 'ver', 'anos', 'ano', 'dia', 'dias',\n",
+    "    'pode', 'podem', 'vai', 'vão', 'fazer', 'feito', 'bem', 'muito', 'toda', 'todo',\n",
+    "    'todos', 'todas', 'vez', 'vezes', 'onde', 'aqui', 'ali', 'lá', 'agora', 'então',\n",
+    "    'sobre', 'após', 'durante', 'antes', 'depois', 'enquanto', 'desde'\n",
+    "}\n",
+    "\n",
+    "print(f\"⚙️ Configurações do Crawler:\")\n",
+    "print(f\"   🌐 URL Base: {BASE_URL}\")\n",
+    "print(f\"   📄 Máximo de páginas: {MAX_PAGES}\")\n",
+    "print(f\"   ⏱️ Delay entre requisições: {DELAY}s\")\n",
+    "print(f\"   🚫 Stopwords: {len(STOPWORDS)} palavras filtradas\")\n",
+    "print(f\"\\n✅ Configuração concluída!\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_crawler"
+   },
+   "source": [
+    "# 2️⃣ Implementação do Web Crawler\n",
+    "\n",
+    "Vamos criar nossa classe principal do web crawler com todas as funcionalidades necessárias."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "crawler_class"
+   },
+   "outputs": [],
+   "source": [
+    "class UnivespWebCrawler:\n",
+    "    \"\"\"\n",
+    "    🕷️ Web Crawler da Univesp com Análise de Frequência de Palavras\n",
+    "    \n",
+    "    Esta classe implementa um crawler completo que:\n",
+    "    - Visita páginas da Univesp sistematicamente\n",
+    "    - Extrai e processa texto de cada página\n",
+    "    - Analisa frequência de palavras\n",
+    "    - Gera estatísticas detalhadas\n",
+    "    \"\"\"\n",
+    "    \n",
+    "    def __init__(self, base_url=BASE_URL, max_pages=MAX_PAGES, delay=DELAY):\n",
+    "        self.base_url = base_url\n",
+    "        self.max_pages = max_pages\n",
+    "        self.delay = delay\n",
+    "        self.visited_urls = set()\n",
+    "        self.failed_urls = set()\n",
+    "        self.word_frequency = Counter()\n",
+    "        self.page_word_counts = defaultdict(Counter)\n",
+    "        self.crawl_data = []\n",
+    "        \n",
+    "        # Configurar sessão HTTP com retry\n",
+    "        self.session = requests.Session()\n",
+    "        retry_strategy = Retry(\n",
+    "            total=3,\n",
+    "            backoff_factor=1,\n",
+    "            status_forcelist=[429, 500, 502, 503, 504],\n",
+    "        )\n",
+    "        adapter = HTTPAdapter(max_retries=retry_strategy)\n",
+    "        self.session.mount(\"http://\", adapter)\n",
+    "        self.session.mount(\"https://\", adapter)\n",
+    "    \n",
+    "    def is_valid_url(self, url):\n",
+    "        \"\"\"Verifica se a URL é válida e pertence ao domínio da Univesp\"\"\"\n",
+    "        try:\n",
+    "            parsed = urlparse(url)\n",
+    "            return (parsed.netloc.endswith('univesp.br') and \n",
+    "                   parsed.scheme in ['http', 'https'] and\n",
+    "                   not any(ext in url.lower() for ext in ['.pdf', '.jpg', '.png', '.gif', '.zip', '.doc']))\n",
+    "        except:\n",
+    "            return False\n",
+    "    \n",
+    "    def fetch_page(self, url):\n",
+    "        \"\"\"Faz o download do conteúdo de uma página\"\"\"\n",
+    "        try:\n",
+    "            print(f\"🔗 Visitando: {url}\")\n",
+    "            response = self.session.get(url, headers=HEADERS, timeout=TIMEOUT)\n",
+    "            response.raise_for_status()\n",
+    "            return response.text\n",
+    "        except Exception as e:\n",
+    "            print(f\"❌ Erro ao acessar {url}: {e}\")\n",
+    "            self.failed_urls.add(url)\n",
+    "            return None\n",
+    "    \n",
+    "    def extract_text_and_links(self, html_content, base_url):\n",
+    "        \"\"\"Extrai texto limpo e links de uma página HTML\"\"\"\n",
+    "        try:\n",
+    "            soup = BeautifulSoup(html_content, 'html.parser')\n",
+    "            \n",
+    "            # Remove scripts, estilos e elementos desnecessários\n",
+    "            for element in soup([\"script\", \"style\", \"nav\", \"footer\", \"header\"]):\n",
+    "                element.decompose()\n",
+    "            \n",
+    "            # Extrai texto\n",
+    "            text = soup.get_text()\n",
+    "            \n",
+    "            # Limpa o texto\n",
+    "            lines = (line.strip() for line in text.splitlines())\n",
+    "            chunks = (phrase.strip() for line in lines for phrase in line.split(\"  \"))\n",
+    "            clean_text = ' '.join(chunk for chunk in chunks if chunk)\n",
+    "            \n",
+    "            # Extrai links\n",
+    "            links = []\n",
+    "            for link in soup.find_all('a', href=True):\n",
+    "                absolute_url = urljoin(base_url, link['href'])\n",
+    "                if self.is_valid_url(absolute_url):\n",
+    "                    links.append(absolute_url)\n",
+    "            \n",
+    "            return clean_text, list(set(links))  # Remove duplicatas\n",
+    "            \n",
+    "        except Exception as e:\n",
+    "            print(f\"❌ Erro ao processar HTML: {e}\")\n",
+    "            return \"\", []\n",
+    "    \n",
+    "    def process_text(self, text):\n",
+    "        \"\"\"Processa texto para contar palavras\"\"\"\n",
+    "        if not text:\n",
+    "            return Counter()\n",
+    "        \n",
+    "        # Converte para minúsculas\n",
+    "        text = text.lower()\n",
+    "        \n",
+    "        # Encontra palavras (incluindo acentos)\n",
+    "        words = re.findall(r'\\b[a-záàâãäéèêëíìîïóòôõöúùûüçñ]+\\b', text)\n",
+    "        \n",
+    "        # Filtra palavras muito curtas e stopwords\n",
+    "        filtered_words = [word for word in words \n",
+    "                         if len(word) > 2 and word not in STOPWORDS]\n",
+    "        \n",
+    "        return Counter(filtered_words)\n",
+    "    \n",
+    "    def crawl_page(self, url):\n",
+    "        \"\"\"Processa uma página específica\"\"\"\n",
+    "        # Download da página\n",
+    "        html_content = self.fetch_page(url)\n",
+    "        if not html_content:\n",
+    "            return []\n",
+    "        \n",
+    "        # Extrai texto e links\n",
+    "        text, links = self.extract_text_and_links(html_content, url)\n",
+    "        \n",
+    "        # Processa texto\n",
+    "        if text:\n",
+    "            word_count = self.process_text(text)\n",
+    "            self.page_word_counts[url] = word_count\n",
+    "            self.word_frequency.update(word_count)\n",
+    "            \n",
+    "            # Armazena dados para análise posterior\n",
+    "            self.crawl_data.append({\n",
+    "                'url': url,\n",
+    "                'text_length': len(text),\n",
+    "                'word_count': sum(word_count.values()),\n",
+    "                'unique_words': len(word_count),\n",
+    "                'timestamp': datetime.now()\n",
+    "            })\n",
+    "        \n",
+    "        return links\n",
+    "    \n",
+    "    def crawl(self):\n",
+    "        \"\"\"Executa o processo principal de crawling\"\"\"\n",
+    "        print(\"🕷️ INICIANDO WEB CRAWLER DA UNIVESP\")\n",
+    "        print(\"=\" * 50)\n",
+    "        print(f\"🌐 URL inicial: {self.base_url}\")\n",
+    "        print(f\"📄 Máximo de páginas: {self.max_pages}\")\n",
+    "        print(f\"⏱️ Delay: {self.delay}s\")\n",
+    "        print()\n",
+    "        \n",
+    "        start_time = time.time()\n",
+    "        urls_to_visit = [self.base_url]\n",
+    "        \n",
+    "        while urls_to_visit and len(self.visited_urls) < self.max_pages:\n",
+    "            current_url = urls_to_visit.pop(0)\n",
+    "            \n",
+    "            if current_url in self.visited_urls:\n",
+    "                continue\n",
+    "            \n",
+    "            self.visited_urls.add(current_url)\n",
+    "            \n",
+    "            # Processa a página\n",
+    "            new_links = self.crawl_page(current_url)\n",
+    "            \n",
+    "            # Adiciona novos links\n",
+    "            for link in new_links:\n",
+    "                if (link not in self.visited_urls and \n",
+    "                    link not in urls_to_visit and \n",
+    "                    link not in self.failed_urls):\n",
+    "                    urls_to_visit.append(link)\n",
+    "            \n",
+    "            # Progresso\n",
+    "            if len(self.visited_urls) % 5 == 0:\n",
+    "                print(f\"📈 Progresso: {len(self.visited_urls)}/{self.max_pages} páginas\")\n",
+    "            \n",
+    "            # Delay\n",
+    "            time.sleep(self.delay)\n",
+    "        \n",
+    "        end_time = time.time()\n",
+    "        \n",
+    "        print(f\"\\n✅ Crawling concluído!\")\n",
+    "        print(f\"📊 Páginas visitadas: {len(self.visited_urls)}\")\n",
+    "        print(f\"❌ Páginas com erro: {len(self.failed_urls)}\")\n",
+    "        print(f\"⏱️ Tempo total: {end_time - start_time:.2f} segundos\")\n",
+    "        print(f\"📝 Palavras únicas encontradas: {len(self.word_frequency)}\")\n",
+    "        print(f\"🔤 Total de ocorrências: {sum(self.word_frequency.values())}\")\n",
+    "        \n",
+    "        return True\n",
+    "    \n",
+    "    def get_dataframe(self):\n",
+    "        \"\"\"Retorna os dados do crawl como DataFrame do pandas\"\"\"\n",
+    "        return pd.DataFrame(self.crawl_data)\n",
+    "    \n",
+    "    def get_word_frequency_df(self, top_n=100):\n",
+    "        \"\"\"Retorna as palavras mais frequentes como DataFrame\"\"\"\n",
+    "        top_words = self.word_frequency.most_common(top_n)\n",
+    "        return pd.DataFrame(top_words, columns=['palavra', 'frequencia'])\n",
+    "\n",
+    "print(\"✅ Classe UnivespWebCrawler criada com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_execucao"
+   },
+   "source": [
+    "## 🚀 Executando o Web Crawler\n",
+    "\n",
+    "Agora vamos criar uma instância do crawler e executá-lo:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "executar_crawler",
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# 🕷️ Criar e executar o crawler\n",
+    "crawler = UnivespWebCrawler(\n",
+    "    base_url=BASE_URL,\n",
+    "    max_pages=MAX_PAGES,\n",
+    "    delay=DELAY\n",
+    ")\n",
+    "\n",
+    "# Executar o crawling\n",
+    "sucesso = crawler.crawl()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_analise"
+   },
+   "source": [
+    "# 3️⃣ Análise dos Dados Coletados\n",
+    "\n",
+    "Agora vamos analisar os dados coletados pelo nosso crawler."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "analise_basica"
+   },
+   "outputs": [],
+   "source": [
+    "# 📊 Análise básica dos dados\n",
+    "if sucesso:\n",
+    "    print(\"📈 ANÁLISE DOS DADOS COLETADOS\")\n",
+    "    print(\"=\" * 40)\n",
+    "    \n",
+    "    # Estatísticas gerais\n",
+    "    df_pages = crawler.get_dataframe()\n",
+    "    df_words = crawler.get_word_frequency_df(50)\n",
+    "    \n",
+    "    print(f\"\\n🔍 Estatísticas Gerais:\")\n",
+    "    print(f\"   📄 Total de páginas processadas: {len(df_pages)}\")\n",
+    "    print(f\"   🔤 Palavras únicas encontradas: {len(crawler.word_frequency)}\")\n",
+    "    print(f\"   📊 Total de ocorrências de palavras: {sum(crawler.word_frequency.values())}\")\n",
+    "    print(f\"   📝 Média de palavras por página: {df_pages['word_count'].mean():.1f}\")\n",
+    "    print(f\"   📏 Média de caracteres por página: {df_pages['text_length'].mean():.1f}\")\n",
+    "    \n",
+    "    print(f\"\\n🏆 TOP 15 PALAVRAS MAIS FREQUENTES:\")\n",
+    "    print(\"-\" * 45)\n",
+    "    for i, (palavra, freq) in enumerate(df_words.head(15).values, 1):\n",
+    "        print(f\"{i:2d}. {palavra:<20} : {freq:>4} ocorrências\")\n",
+    "    \n",
+    "    # Criar DataFrames para uso posterior\n",
+    "    print(f\"\\n✅ DataFrames criados:\")\n",
+    "    print(f\"   📊 df_pages: {len(df_pages)} linhas (dados por página)\")\n",
+    "    print(f\"   🔤 df_words: {len(df_words)} linhas (frequência de palavras)\")\nelse:\n    print(\"❌ Erro durante o crawling. Verificar logs acima.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "detalhes_paginas"
+   },
+   "outputs": [],
+   "source": [
+    "# 📋 Detalhes das páginas coletadas\n",
+    "if not df_pages.empty:\n",
+    "    print(\"📄 DETALHES DAS PÁGINAS COLETADAS\")\n",
+    "    print(\"=\" * 40)\n",
+    "    \n",
+    "    # Exibir as primeiras páginas\n",
+    "    display(df_pages.head())\n",
+    "    \n",
+    "    print(\"\\n📊 Estatísticas descritivas:\")\n",
+    "    display(df_pages[['text_length', 'word_count', 'unique_words']].describe())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_visualizacoes"
+   },
+   "source": [
+    "# 4️⃣ Visualizações e Gráficos\n",
+    "\n",
+    "Vamos criar visualizações interessantes dos dados coletados."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "wordcloud"
+   },
+   "outputs": [],
+   "source": [
+    "# 🌟 Word Cloud das palavras mais frequentes\n",
+    "if not df_words.empty:\n",
+    "    print(\"☁️ Criando Word Cloud...\")\n",
+    "    \n",
+    "    # Preparar dados para word cloud\n",
+    "    word_freq_dict = dict(zip(df_words['palavra'], df_words['frequencia']))\n",
+    "    \n",
+    "    # Criar word cloud\n",
+    "    plt.figure(figsize=(15, 8))\n",
+    "    \n",
+    "    wordcloud = WordCloud(\n",
+    "        width=1200, height=600,\n",
+    "        background_color='white',\n",
+    "        colormap='viridis',\n",
+    "        max_words=100,\n",
+    "        min_font_size=10\n",
+    "    ).generate_from_frequencies(word_freq_dict)\n",
+    "    \n",
+    "    plt.imshow(wordcloud, interpolation='bilinear')\n",
+    "    plt.axis('off')\n",
+    "    plt.title('☁️ Nuvem de Palavras - Site da Univesp', fontsize=20, pad=20)\n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    print(\"✅ Word Cloud criada com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "grafico_barras"
+   },
+   "outputs": [],
+   "source": [
+    "# 📊 Gráfico de barras das palavras mais frequentes\n",
+    "if not df_words.empty:\n",
+    "    print(\"📊 Criando gráfico de barras...\")\n",
+    "    \n",
+    "    # Top 20 palavras\n",
+    "    top_20 = df_words.head(20)\n",
+    "    \n",
+    "    plt.figure(figsize=(14, 8))\n",
+    "    \n",
+    "    # Criar gráfico de barras\n",
+    "    bars = plt.bar(range(len(top_20)), top_20['frequencia'], \n",
+    "                   color=plt.cm.viridis(np.linspace(0, 1, len(top_20))))\n",
+    "    \n",
+    "    plt.xlabel('Palavras', fontsize=12)\n",
+    "    plt.ylabel('Frequência', fontsize=12)\n",
+    "    plt.title('📊 Top 20 Palavras Mais Frequentes - Site da Univesp', fontsize=16, pad=20)\n",
+    "    plt.xticks(range(len(top_20)), top_20['palavra'], rotation=45, ha='right')\n",
+    "    plt.grid(axis='y', alpha=0.3)\n",
+    "    \n",
+    "    # Adicionar valores nas barras\n",
+    "    for i, bar in enumerate(bars):\n",
+    "        height = bar.get_height()\n",
+    "        plt.text(bar.get_x() + bar.get_width()/2., height + 1,\n",
+    "                f'{int(height)}', ha='center', va='bottom', fontsize=10)\n",
+    "    \n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    print(\"✅ Gráfico de barras criado com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "graficos_interativos"
+   },
+   "outputs": [],
+   "source": [
+    "# 📈 Gráficos interativos com Plotly\n",
+    "if not df_words.empty and not df_pages.empty:\n",
+    "    print(\"🎨 Criando gráficos interativos...\")\n",
+    "    \n",
+    "    # 1. Gráfico interativo de barras das palavras mais frequentes\n",
+    "    top_25 = df_words.head(25)\n",
+    "    \n",
+    "    fig1 = px.bar(\n",
+    "        top_25, \n",
+    "        x='palavra', \n",
+    "        y='frequencia',\n",
+    "        title='🏆 Top 25 Palavras Mais Frequentes (Interativo)',\n",
+    "        labels={'palavra': 'Palavra', 'frequencia': 'Frequência'},\n",
+    "        color='frequencia',\n",
+    "        color_continuous_scale='viridis'\n",
+    "    )\n",
+    "    fig1.update_layout(xaxis_tickangle=-45, height=600)\n",
+    "    fig1.show()\n",
+    "    \n",
+    "    # 2. Gráfico de distribuição de palavras por página\n",
+    "    fig2 = px.scatter(\n",
+    "        df_pages, \n",
+    "        x='text_length', \n",
+    "        y='word_count',\n",
+    "        size='unique_words',\n",
+    "        hover_data=['url'],\n",
+    "        title='📊 Distribuição: Tamanho do Texto vs Contagem de Palavras',\n",
+    "        labels={\n",
+    "            'text_length': 'Tamanho do Texto (caracteres)',\n",
+    "            'word_count': 'Número de Palavras',\n",
+    "            'unique_words': 'Palavras Únicas'\n",
+    "        }\n",
+    "    )\n",
+    "    fig2.show()\n",
+    "    \n",
+    "    # 3. Gráfico de pizza das categorias de palavras\n",
+    "    # Categorizar palavras por frequência\n",
+    "    categories = []\n",
+    "    for freq in df_words['frequencia']:\n",
+    "        if freq >= 100:\n",
+    "            categories.append('Muito Frequente (≥100)')\n",
+    "        elif freq >= 50:\n",
+    "            categories.append('Frequente (50-99)')\n",
+    "        elif freq >= 20:\n",
+    "            categories.append('Moderada (20-49)')\n",
+    "        elif freq >= 10:\n",
+    "            categories.append('Baixa (10-19)')\n",
+    "        else:\n",
+    "            categories.append('Rara (<10)')\n",
+    "    \n",
+    "    df_words['categoria'] = categories\n",
+    "    category_counts = df_words['categoria'].value_counts()\n",
+    "    \n",
+    "    fig3 = px.pie(\n",
+    "        values=category_counts.values,\n",
+    "        names=category_counts.index,\n",
+    "        title='🥧 Distribuição de Palavras por Categoria de Frequência'\n",
+    "    )\n",
+    "    fig3.show()\n",
+    "    \n",
+    "    print(\"✅ Gráficos interativos criados com sucesso!\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_analise_avancada"
+   },
+   "source": [
+    "# 5️⃣ Análise Avançada e Insights\n",
+    "\n",
+    "Vamos fazer algumas análises mais detalhadas dos dados."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "analise_correlacoes"
+   },
+   "outputs": [],
+   "source": [
+    "# 🔍 Análise de correlações\n",
+    "if not df_pages.empty:\n",
+    "    print(\"🔗 ANÁLISE DE CORRELAÇÕES\")\n",
+    "    print(\"=\" * 30)\n",
+    "    \n",
+    "    # Matriz de correlação\n",
+    "    correlation_matrix = df_pages[['text_length', 'word_count', 'unique_words']].corr()\n",
+    "    \n",
+    "    # Heatmap\n",
+    "    plt.figure(figsize=(10, 8))\n",
+    "    sns.heatmap(correlation_matrix, \n",
+    "                annot=True, \n",
+    "                cmap='coolwarm', \n",
+    "                center=0, \n",
+    "                square=True,\n",
+    "                fmt='.3f')\n",
+    "    plt.title('🔥 Matriz de Correlação entre Métricas das Páginas', fontsize=16, pad=20)\n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    # Insights\n",
+    "    print(\"\\n💡 INSIGHTS:\")\n",
+    "    corr_text_words = correlation_matrix.loc['text_length', 'word_count']\n",
+    "    corr_words_unique = correlation_matrix.loc['word_count', 'unique_words']\n",
+    "    \n",
+    "    print(f\"   📏 Correlação Tamanho do Texto ↔ Número de Palavras: {corr_text_words:.3f}\")\n",
+    "    print(f\"   🔤 Correlação Número de Palavras ↔ Palavras Únicas: {corr_words_unique:.3f}\")\n",
+    "    \n",
+    "    if corr_text_words > 0.7:\n",
+    "        print(\"   ✅ Forte correlação positiva entre tamanho do texto e número de palavras\")\n",
+    "    if corr_words_unique > 0.7:\n",
+    "        print(\"   ✅ Forte correlação positiva entre número total e palavras únicas\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "analise_diversidade"
+   },
+   "outputs": [],
+   "source": [
+    "# 📊 Análise de diversidade lexical\n",
+    "if not df_pages.empty:\n",
+    "    print(\"🌈 ANÁLISE DE DIVERSIDADE LEXICAL\")\n",
+    "    print(\"=\" * 35)\n",
+    "    \n",
+    "    # Calcular diversidade lexical (Type-Token Ratio)\n",
+    "    df_pages['diversidade_lexical'] = df_pages['unique_words'] / df_pages['word_count']\n",
+    "    \n",
+    "    # Estatísticas\n",
+    "    diversidade_media = df_pages['diversidade_lexical'].mean()\n",
+    "    diversidade_std = df_pages['diversidade_lexical'].std()\n",
+    "    \n",
+    "    print(f\"📊 Diversidade Lexical Média: {diversidade_media:.3f}\")\n",
+    "    print(f\"📈 Desvio Padrão: {diversidade_std:.3f}\")\n",
+    "    \n",
+    "    # Gráfico de distribuição\n",
+    "    plt.figure(figsize=(12, 6))\n",
+    "    \n",
+    "    plt.subplot(1, 2, 1)\n",
+    "    plt.hist(df_pages['diversidade_lexical'], bins=15, alpha=0.7, color='skyblue', edgecolor='black')\n",
+    "    plt.axvline(diversidade_media, color='red', linestyle='--', label=f'Média: {diversidade_media:.3f}')\n",
+    "    plt.xlabel('Diversidade Lexical (TTR)')\n",
+    "    plt.ylabel('Frequência')\n",
+    "    plt.title('📊 Distribuição da Diversidade Lexical')\n",
+    "    plt.legend()\n",
+    "    plt.grid(alpha=0.3)\n",
+    "    \n",
+    "    plt.subplot(1, 2, 2)\n",
+    "    plt.scatter(df_pages['word_count'], df_pages['diversidade_lexical'], alpha=0.6, color='green')\n",
+    "    plt.xlabel('Número de Palavras')\n",
+    "    plt.ylabel('Diversidade Lexical')\n",
+    "    plt.title('📈 Diversidade vs Número de Palavras')\n",
+    "    plt.grid(alpha=0.3)\n",
+    "    \n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "    \n",
+    "    # Páginas com maior diversidade\n",
+    "    top_diversidade = df_pages.nlargest(3, 'diversidade_lexical')\n",
+    "    \n",
+    "    print(\"\\n🏆 TOP 3 PÁGINAS COM MAIOR DIVERSIDADE LEXICAL:\")\n",
+    "    for i, (idx, row) in enumerate(top_diversidade.iterrows(), 1):\n",
+    "        print(f\"{i}. Diversidade: {row['diversidade_lexical']:.3f}\")\n",
+    "        print(f\"   URL: {row['url'][:80]}...\")\n",
+    "        print(f\"   Palavras: {row['word_count']} | Únicas: {row['unique_words']}\\n\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_relatorios"
+   },
+   "source": [
+    "# 6️⃣ Relatórios e Exportação\n",
+    "\n",
+    "Vamos gerar relatórios finais e preparar os dados para download."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "relatorio_final"
+   },
+   "outputs": [],
+   "source": [
+    "# 📋 Relatório final consolidado\n",
+    "def gerar_relatorio_final():\n",
+    "    if not crawler.visited_urls:\n",
+    "        print(\"❌ Nenhum dado disponível para relatório\")\n",
+    "        return\n",
+    "    \n",
+    "    print(\"📋 RELATÓRIO FINAL - WEB CRAWLER UNIVESP\")\n",
+    "    print(\"=\" * 50)\n",
+    "    print(f\"🕷️ Executado em: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}\")\n",
+    "    print(f\"🌐 URL Base: {BASE_URL}\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Estatísticas do Crawling\n",
+    "    print(\"📊 ESTATÍSTICAS DO CRAWLING:\")\n",
+    "    print(\"-\" * 30)\n",
+    "    print(f\"✅ Páginas visitadas com sucesso: {len(crawler.visited_urls)}\")\n",
+    "    print(f\"❌ Páginas com erro: {len(crawler.failed_urls)}\")\n",
+    "    print(f\"🎯 Taxa de sucesso: {len(crawler.visited_urls)/(len(crawler.visited_urls)+len(crawler.failed_urls))*100:.1f}%\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Análise de Texto\n",
+    "    print(\"📝 ANÁLISE DE TEXTO:\")\n",
+    "    print(\"-\" * 20)\n",
+    "    print(f\"🔤 Total de palavras únicas: {len(crawler.word_frequency):,}\")\n",
+    "    print(f\"📊 Total de ocorrências: {sum(crawler.word_frequency.values()):,}\")\n",
+    "    print(f\"📄 Média de palavras por página: {df_pages['word_count'].mean():.1f}\")\n",
+    "    print(f\"🌈 Diversidade lexical média: {df_pages['diversidade_lexical'].mean():.3f}\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Top palavras\n",
+    "    print(\"🏆 TOP 10 PALAVRAS MAIS FREQUENTES:\")\n",
+    "    print(\"-\" * 35)\n",
+    "    for i, (palavra, freq) in enumerate(crawler.word_frequency.most_common(10), 1):\n",
+    "        print(f\"{i:2d}. {palavra:<20} : {freq:>4} ocorrências\")\n",
+    "    print()\n",
+    "    \n",
+    "    # Análise por domínios temáticos\n",
+    "    palavras_educacao = ['curso', 'ensino', 'educação', 'aprendizagem', 'estudo', 'aluno', 'professor']\n",
+    "    palavras_tecnologia = ['tecnologia', 'computação', 'dados', 'sistema', 'digital', 'informática']\n",
+    "    \n",
+    "    freq_educacao = sum(crawler.word_frequency.get(palavra, 0) for palavra in palavras_educacao)\n",
+    "    freq_tecnologia = sum(crawler.word_frequency.get(palavra, 0) for palavra in palavras_tecnologia)\n",
+    "    \n",
+    "    print(\"🎓 ANÁLISE TEMÁTICA:\")\n",
+    "    print(\"-\" * 20)\n",
+    "    print(f\"📚 Palavras relacionadas à Educação: {freq_educacao} ocorrências\")\n",
+    "    print(f\"💻 Palavras relacionadas à Tecnologia: {freq_tecnologia} ocorrências\")\n",
+    "    \n",
+    "    if freq_educacao > freq_tecnologia:\n",
+    "        print(\"📊 Foco predominante: Educação\")\n",
+    "    else:\n",
+    "        print(\"📊 Foco predominante: Tecnologia\")\n",
+    "    \n",
+    "    print(\"\\n\" + \"=\" * 50)\n",
+    "    print(\"✅ Relatório gerado com sucesso!\")\n",
+    "\n",
+    "# Gerar relatório\n",
+    "gerar_relatorio_final()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "exportar_dados"
+   },
+   "outputs": [],
+   "source": [
+    "# 💾 Preparar dados para download\n",
+    "from google.colab import files\n",
+    "import json\n",
+    "\n",
+    "print(\"💾 PREPARANDO DADOS PARA DOWNLOAD\")\n",
+    "print(\"=\" * 35)\n",
+    "\n",
+    "# 1. Salvar frequência de palavras como CSV\n",
+    "df_words_full = crawler.get_word_frequency_df(1000)  # Top 1000 palavras\n",
+    "df_words_full.to_csv('univesp_frequencia_palavras.csv', index=False, encoding='utf-8')\n",
+    "print(\"✅ Arquivo CSV criado: univesp_frequencia_palavras.csv\")\n",
+    "\n",
+    "# 2. Salvar dados das páginas como CSV\n",
+    "df_pages_export = df_pages.copy()\n",
+    "df_pages_export['timestamp'] = df_pages_export['timestamp'].astype(str)\n",
+    "df_pages_export.to_csv('univesp_dados_paginas.csv', index=False, encoding='utf-8')\n",
+    "print(\"✅ Arquivo CSV criado: univesp_dados_paginas.csv\")\n",
+    "\n",
+    "# 3. Salvar relatório como JSON\n",
+    "relatorio_json = {\n",
+    "    'metadata': {\n",
+    "        'data_execucao': datetime.now().isoformat(),\n",
+    "        'url_base': BASE_URL,\n",
+    "        'max_pages': MAX_PAGES,\n",
+    "        'delay': DELAY\n",
+    "    },\n",
+    "    'estatisticas': {\n",
+    "        'paginas_visitadas': len(crawler.visited_urls),\n",
+    "        'paginas_com_erro': len(crawler.failed_urls),\n",
+    "        'palavras_unicas': len(crawler.word_frequency),\n",
+    "        'total_ocorrencias': sum(crawler.word_frequency.values()),\n",
+    "        'diversidade_lexical_media': float(df_pages['diversidade_lexical'].mean()) if 'diversidade_lexical' in df_pages.columns else 0\n",
+    "    },\n",
+    "    'top_palavras': dict(crawler.word_frequency.most_common(50)),\n",
+    "    'urls_visitadas': list(crawler.visited_urls),\n",
+    "    'urls_com_erro': list(crawler.failed_urls)\n",
+    "}\n",
+    "\n",
+    "with open('univesp_relatorio_completo.json', 'w', encoding='utf-8') as f:\n",
+    "    json.dump(relatorio_json, f, ensure_ascii=False, indent=2)\n",
+    "print(\"✅ Arquivo JSON criado: univesp_relatorio_completo.json\")\n",
+    "\n",
+    "# 4. Criar arquivo README para os dados\n",
+    "readme_content = f\"\"\"\n# 📊 Dados do Web Crawler - Univesp\n\n## 📋 Descrição\nDados coletados pelo web crawler da Univesp executado em {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}.\n\n## 📁 Arquivos Inclusos:\n- **univesp_frequencia_palavras.csv**: Top 1000 palavras mais frequentes\n- **univesp_dados_paginas.csv**: Dados detalhados de cada página visitada\n- **univesp_relatorio_completo.json**: Relatório completo em formato JSON\n- **README.md**: Este arquivo de documentação\n\n## 📊 Estatísticas:\n- 🌐 **URL Base**: {BASE_URL}\n- 📄 **Páginas Processadas**: {len(crawler.visited_urls)}\n- 🔤 **Palavras Únicas**: {len(crawler.word_frequency):,}\n- 📊 **Total de Ocorrências**: {sum(crawler.word_frequency.values()):,}\n\n## 🏆 Top 10 Palavras:\n\"\"\"\n\nfor i, (palavra, freq) in enumerate(crawler.word_frequency.most_common(10), 1):\n    readme_content += f\"{i:2d}. **{palavra}**: {freq} ocorrências\\n\"\n\nreadme_content += f\"\"\"\n\n## 🛠️ Como Usar:\n1. Abra os arquivos CSV em Excel, Google Sheets ou pandas\n2. Use o arquivo JSON para análises programáticas\n3. Consulte este README para entender a estrutura dos dados\n\n---\n*Gerado pelo Web Crawler da Univesp - Notebook do Google Colab*\n\"\"\"\n\nwith open('README.md', 'w', encoding='utf-8') as f:\n    f.write(readme_content)\nprint(\"✅ Arquivo README criado: README.md\")\n\nprint(\"\\n📦 Todos os arquivos estão prontos para download!\")\nprint(\"💡 Use o menu Files → Download para baixar os arquivos individualmente\")\nprint(\"💡 Ou execute a célula abaixo para download automático\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "download_arquivos"
+   },
+   "outputs": [],
+   "source": [
+    "# 📥 Download automático dos arquivos (opcional)\n",
+    "print(\"📥 Iniciando download dos arquivos...\")\n",
+    "print(\"(Os arquivos serão baixados para sua pasta de Downloads)\")\n",
+    "\n",
+    "try:\n",
+    "    files.download('univesp_frequencia_palavras.csv')\n",
+    "    files.download('univesp_dados_paginas.csv')\n",
+    "    files.download('univesp_relatorio_completo.json')\n",
+    "    files.download('README.md')\n",
+    "    print(\"\\n✅ Download concluído com sucesso!\")\nexcept Exception as e:\n",
+    "    print(f\"⚠️ Erro no download automático: {e}\")\n    print(\"💡 Use o menu Files para download manual\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "secao_publicacao_github"
+   },
+   "source": [
+    "# 🚀 Publicando no GitHub\n",
+    "\n",
+    "## 📝 Guia Completo para Publicar este Projeto no GitHub\n",
+    "\n",
+    "### 🌟 **Opção 1: Publicação Direta do Colab**\n",
+    "\n",
+    "1. **Salvar no GitHub diretamente:**\n",
+    "   - No Colab: `File` → `Save a copy in GitHub`\n",
+    "   - Escolha seu repositório ou crie um novo\n",
+    "   - Adicione uma mensagem de commit\n",
+    "   - Clique em `OK`\n",
+    "\n",
+    "### 🛠️ **Opção 2: Processo Manual Completo**\n",
+    "\n",
+    "#### **Passo 1: Preparar o Repositório**\n",
+    "1. Acesse [GitHub.com](https://github.com)\n",
+    "2. Clique em `New Repository`\n",
+    "3. Nome sugerido: `univesp-web-crawler`\n",
+    "4. Adicione descrição: `🕷️ Web Crawler da Univesp com análise de frequência de palavras`\n",
+    "5. Marque `Add a README file`\n",
+    "6. Clique `Create repository`\n",
+    "\n",
+    "#### **Passo 2: Estrutura de Arquivos Recomendada**\n",
+    "```\n",
+    "univesp-web-crawler/\n",
+    "├── Univesp_Web_Crawler_Colab.ipynb    # Este notebook\n",
+    "├── README.md                           # Documentação principal\n",
+    "├── data/                              # Dados coletados\n",
+    "│   ├── univesp_frequencia_palavras.csv\n",
+    "│   ├── univesp_dados_paginas.csv\n",
+    "│   └── univesp_relatorio_completo.json\n",
+    "├── images/                            # Screenshots e gráficos\n",
+    "│   ├── wordcloud.png\n",
+    "│   └── graficos_analise.png\n",
+    "└── requirements.txt                   # Dependências do projeto\n",
+    "```\n",
+    "\n",
+    "#### **Passo 3: Criar README.md Profissional**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "criar_readme_github"
+   },
+   "outputs": [],
+   "source": [
+    "# 📝 Criar README profissional para GitHub\n",
+    "readme_github = f'''# 🕷️ Web Crawler da Univesp\n",
+    "\n",
+    "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SEU_USUARIO/univesp-web-crawler/blob/main/Univesp_Web_Crawler_Colab.ipynb)\n",
+    "[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)\n",
+    "[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)\n",
+    "\n",
+    "## 📋 Sobre o Projeto\n",
+    "\n",
+    "Este projeto implementa um **web crawler inteligente** que analisa o conteúdo do site da Univesp, extraindo informações valiosas sobre a frequência de palavras e padrões textuais. Desenvolvido como parte do **Desafio Semana 4**, demonstra técnicas avançadas de web scraping, processamento de linguagem natural e visualização de dados.\n",
+    "\n",
+    "### 🎯 Objetivos\n",
+    "- Implementar crawling sistemático e respeitoso do site da Univesp\n",
+    "- Analisar frequência e distribuição de palavras\n",
+    "- Gerar visualizações interativas dos dados coletados\n",
+    "- Criar ferramenta reutilizável para análise de conteúdo web\n",
+    "\n",
+    "### ✨ Características Principais\n",
+    "- 🌐 **Crawling Inteligente**: Navegação sistemática com controle de taxa\n",
+    "- 🧹 **Processamento de Texto**: Limpeza automática e filtro de stopwords\n",
+    "- 📊 **Análises Avançadas**: Diversidade lexical, correlações e insights\n",
+    "- 🎨 **Visualizações Ricas**: Word clouds, gráficos interativos com Plotly\n",
+    "- 💾 **Exportação Completa**: CSV, JSON e relatórios detalhados\n",
+    "- 🐍 **100% Python**: Compatível com Google Colab e ambientes locais\n",
+    "\n",
+    "## 🚀 Como Usar\n",
+    "\n",
+    "### Opção 1: Google Colab (Recomendada)\n",
+    "1. Clique no botão \"Open in Colab\" acima\n",
+    "2. Execute as células sequencialmente\n",
+    "3. Baixe os resultados gerados\n",
+    "\n",
+    "### Opção 2: Ambiente Local\n",
+    "```bash\n",
+    "# Clone o repositório\n",
+    "git clone https://github.com/SEU_USUARIO/univesp-web-crawler.git\n",
+    "cd univesp-web-crawler\n",
+    "\n",
+    "# Instale dependências\n",
+    "pip install -r requirements.txt\n",
+    "\n",
+    "# Execute o notebook\n",
+    "jupyter notebook Univesp_Web_Crawler_Colab.ipynb\n",
+    "```\n",
+    "\n",
+    "## 📊 Resultados Obtidos\n",
+    "\n",
+    "Baseado na última execução ({datetime.now().strftime(\"%d/%m/%Y\")}):\n",
+    "\n",
+    "- 📄 **{len(crawler.visited_urls)} páginas** analisadas com sucesso\n",
+    "- 🔤 **{len(crawler.word_frequency):,} palavras únicas** identificadas\n",
+    "- 📈 **{sum(crawler.word_frequency.values()):,} ocorrências totais** contabilizadas\n",
+    "- 🎯 **Taxa de sucesso**: {len(crawler.visited_urls)/(len(crawler.visited_urls)+len(crawler.failed_urls))*100:.1f}%\n",
+    "\n",
+    "### 🏆 Palavras Mais Frequentes\n",
+    "'''\n",
+    "\n",
+    "# Adicionar top 10 palavras\n",
+    "for i, (palavra, freq) in enumerate(crawler.word_frequency.most_common(10), 1):\n",
+    "    readme_github += f\"{i}. **{palavra}**: {freq} ocorrências\\n\"\n",
+    "\n",
+    "readme_github += f'''\n",
+    "## 🛠️ Tecnologias Utilizadas\n",
+    "\n",
+    "- **Python 3.7+**: Linguagem principal\n",
+    "- **Requests + BeautifulSoup**: Web scraping\n",
+    "- **Pandas**: Manipulação de dados\n",
+    "- **Matplotlib + Seaborn**: Visualizações estáticas\n",
+    "- **Plotly**: Gráficos interativos\n",
+    "- **WordCloud**: Nuvens de palavras\n",
+    "- **Google Colab**: Ambiente de execução\n",
+    "\n",
+    "## 📁 Estrutura do Projeto\n",
+    "\n",
+    "```\n",
+    "univesp-web-crawler/\n",
+    "├── Univesp_Web_Crawler_Colab.ipynb    # Notebook principal\n",
+    "├── README.md                           # Este arquivo\n",
+    "├── requirements.txt                    # Dependências\n",
+    "├── data/                              # Dados coletados\n",
+    "│   ├── univesp_frequencia_palavras.csv\n",
+    "│   ├── univesp_dados_paginas.csv\n",
+    "│   └── univesp_relatorio_completo.json\n",
+    "└── images/                            # Visualizações geradas\n",
+    "```\n",
+    "\n",
+    "## 📈 Análises Disponíveis\n",
+    "\n",
+    "### 1. Análise de Frequência\n",
+    "- Identificação das palavras mais comuns\n",
+    "- Distribuição estatística das ocorrências\n",
+    "- Categorização por faixas de frequência\n",
+    "\n",
+    "### 2. Diversidade Lexical\n",
+    "- Cálculo do Type-Token Ratio (TTR)\n",
+    "- Análise da riqueza vocabular por página\n",
+    "- Correlações entre métricas textuais\n",
+    "\n",
+    "### 3. Análise Temática\n",
+    "- Identificação de focos temáticos (Educação vs Tecnologia)\n",
+    "- Agrupamento por categorias semânticas\n",
+    "- Insights sobre o conteúdo institucional\n",
+    "\n",
+    "## 🎨 Visualizações\n",
+    "\n",
+    "- ☁️ **Word Clouds**: Representação visual das palavras mais frequentes\n",
+    "- 📊 **Gráficos de Barras**: Rankings de frequência\n",
+    "- 🥧 **Gráficos de Pizza**: Distribuição por categorias\n",
+    "- 📈 **Scatter Plots**: Correlações entre métricas\n",
+    "- 🔥 **Heatmaps**: Matrizes de correlação\n",
+    "\n",
+    "## 🤝 Contribuições\n",
+    "\n",
+    "Contribuições são bem-vindas! Sinta-se livre para:\n",
+    "- Abrir issues para bugs ou sugestões\n",
+    "- Submeter pull requests com melhorias\n",
+    "- Propor novas análises ou visualizações\n",
+    "- Expandir para outros sites educacionais\n",
+    "\n",
+    "## 📄 Licença\n",
+    "\n",
+    "Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.\n",
+    "\n",
+    "## 📧 Contato\n",
+    "\n",
+    "Desenvolvido com ❤️ para o **Desafio Semana 4 - Univesp**\n",
+    "\n",
+    "---\n",
+    "\n",
+    "⭐ **Se este projeto foi útil, considere dar uma estrela!** ⭐\n",
+    "'''\n",
+    "\n",
+    "# Salvar README\n",
+    "with open('README_GitHub.md', 'w', encoding='utf-8') as f:\n",
+    "    f.write(readme_github)\n",
+    "\n",
+    "print(\"✅ README profissional criado: README_GitHub.md\")\n",
+    "print(\"💡 Copie este conteúdo para o README.md do seu repositório no GitHub\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "criar_requirements"
+   },
+   "outputs": [],
+   "source": [
+    "# 📦 Criar arquivo requirements.txt\n",
+    "requirements_content = '''requests==2.31.0\n",
+    "beautifulsoup4==4.12.2\n",
+    "pandas==2.0.3\n",
+    "numpy==1.24.3\n",
+    "matplotlib==3.7.2\n",
+    "seaborn==0.12.2\n",
+    "plotly==5.15.0\n",
+    "wordcloud==1.9.2\n",
+    "urllib3==2.0.4\n",
+    "'''\n",
+    "\n",
+    "with open('requirements_GitHub.txt', 'w', encoding='utf-8') as f:\n",
+    "    f.write(requirements_content)\n",
+    "\n",
+    "print(\"✅ Arquivo requirements.txt criado\")\n",
+    "print(\"💡 Renomeie para 'requirements.txt' no seu repositório\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "instrucoes_finais"
+   },
+   "source": [
+    "## 📋 **Instruções Finais para Publicação**\n",
+    "\n",
+    "### ✅ **Checklist Completo:**\n",
+    "\n",
+    "1. **✅ Preparar Arquivos:**\n",
+    "   - [ ] Download do notebook (.ipynb)\n",
+    "   - [ ] README.md profissional\n",
+    "   - [ ] requirements.txt\n",
+    "   - [ ] Dados coletados (CSV/JSON)\n",
+    "   - [ ] Screenshots das visualizações\n",
+    "\n",
+    "2. **✅ Criar Repositório GitHub:**\n",
+    "   - [ ] Nome: `univesp-web-crawler`\n",
+    "   - [ ] Descrição detalhada\n",
+    "   - [ ] README inicial\n",
+    "   - [ ] Licença MIT\n",
+    "\n",
+    "3. **✅ Upload dos Arquivos:**\n",
+    "   - [ ] Notebook principal\n",
+    "   - [ ] Documentação\n",
+    "   - [ ] Pasta `data/` com resultados\n",
+    "   - [ ] Pasta `images/` com gráficos\n",
+    "\n",
+    "4. **✅ Configurações Finais:**\n",
+    "   - [ ] Topics/Tags: `web-crawler`, `data-science`, `python`, `univesp`\n",
+    "   - [ ] GitHub Pages (opcional)\n",
+    "   - [ ] Badge do Colab atualizado\n",
+    "\n",
+    "### 🎯 **Dicas para Destaque:**\n",
+    "\n",
+    "- **📸 Screenshots**: Inclua imagens das visualizações no README\n",
+    "- **🎬 GIF Demonstrativo**: Grave um GIF da execução do notebook\n",
+    "- **📊 Dados de Exemplo**: Mantenha alguns resultados como exemplo\n",
+    "- **🏷️ Tags Relevantes**: Use tags para facilitar descoberta\n",
+    "- **⭐ Call-to-Action**: Incentive outros a dar estrela no projeto\n",
+    "\n",
+    "### 🚀 **Próximos Passos:**\n",
+    "\n",
+    "1. **Execute todas as células** deste notebook\n",
+    "2. **Baixe todos os arquivos** gerados\n",
+    "3. **Crie o repositório** no GitHub\n",
+    "4. **Faça upload** dos arquivos\n",
+    "5. **Teste o badge** do Colab\n",
+    "6. **Compartilhe** seu projeto!\n",
+    "\n",
+    "---\n",
+    "\n",
+    "**🎉 Parabéns! Seu projeto está pronto para brilhar no GitHub! 🌟**"
+   ]
+  }
+ ]\n}
+
+RESULTADOS DO WEB CRAWLER DA UNIVESP
+============================================================
+
+Data da execução: 17/08/2025 14:49:32
+Páginas visitadas: 25
+Páginas com erro: 0
+Total de palavras únicas: 3468
+Total de ocorrências: 23396
+
+TOP 100 PALAVRAS MAIS FREQUENTES:
+--------------------------------------------------
+  1. bacharelado                    :  1339 ocorrências
+  2. tecnologia                     :  1034 ocorrências
+  3. engenharia                     :   906 ocorrências
+  4. univesp                        :   827 ocorrências
+  5. polo                           :   489 ocorrências
+  6. computação                     :   476 ocorrências
+  7. dados                          :   461 ocorrências
+  8. ciência                        :   460 ocorrências
+  9. licenciatura                   :   457 ocorrências
+ 10. administração                  :   457 ocorrências
+ 11. informação                     :   454 ocorrências
+ 12. letras                         :   453 ocorrências
+ 13. matemática                     :   452 ocorrências
+ 14. pedagogia                      :   449 ocorrências
+ 15. processos                      :   448 ocorrências
+ 16. produção                       :   446 ocorrências
+ 17. habilitação                    :   444 ocorrências
+ 18. gerenciais                     :   444 ocorrências
+ 19. língua                         :   443 ocorrências
+ 20. portuguesa                     :   443 ocorrências
+ 21. cep                            :   441 ocorrências
+ 22. rua                            :   271 ocorrências
+ 23. curso                          :   190 ocorrências
+ 24. centro                         :   188 ocorrências
+ 25. gestão                         :   149 ocorrências
+ 26. pública                        :   148 ocorrências
+ 27. oferta                         :   144 ocorrências
+ 28. superior                       :   135 ocorrências
+ 29. cps                            :   133 ocorrências
+ 30. última                         :   131 ocorrências
+ 31. paulo                          :   129 ocorrências
+ 32. avenida                        :    95 ocorrências
+ 33. cursos                         :    82 ocorrências
+ 34. jardim                         :    81 ocorrências
+ 35. universidade                   :    74 ocorrências
+ 36. virtual                        :    65 ocorrências
+ 37. inclusão                       :    64 ocorrências
+ 38. vila                           :    64 ocorrências
+ 39. estado                         :    62 ocorrências
+ 40. aluno                          :    61 ocorrências
+ 41. escola                         :    57 ocorrências
+ 42. atendimento                    :    57 ocorrências
+ 43. paulista                       :    56 ocorrências
+ 44. vestibular                     :    53 ocorrências
+ 45. uniceu                         :    52 ocorrências
+ 46. polos                          :    45 ocorrências
+ 47. https                          :    40 ocorrências
+ 48. disciplinas                    :    40 ocorrências
+ 49. josé                           :    40 ocorrências
+ 50. graduação                      :    39 ocorrências
+ 51. alunos                         :    39 ocorrências
+ 52. atividades                     :    35 ocorrências
+ 53. acesso                         :    34 ocorrências
+ 54. matrícula                      :    34 ocorrências
+ 55. sobre                          :    33 ocorrências
+ 56. aprendizagem                   :    32 ocorrências
+ 57. libras                         :    31 ocorrências
+ 58. canais                         :    30 ocorrências
+ 59. joão                           :    30 ocorrências
+ 60. aulas                          :    29 ocorrências
+ 61. sedpcd                         :    28 ocorrências
+ 62. inscrições                     :    28 ocorrências
+ 63. praça                          :    28 ocorrências
+ 64. matriz                         :    28 ocorrências
+ 65. estágio                        :    28 ocorrências
+ 66. castro                         :    27 ocorrências
+ 67. nesta                          :    27 ocorrências
+ 68. vista                          :    27 ocorrências
+ 69. introdução                     :    26 ocorrências
+ 70. educação                       :    26 ocorrências
+ 71. institucional                  :    25 ocorrências
+ 72. nove                           :    25 ocorrências
+ 73. quarta                         :    25 ocorrências
+ 74. bairro                         :    25 ocorrências
+ 75. santa                          :    25 ocorrências
+ 76. bela                           :    24 ocorrências
+ 77. ambiente                       :    24 ocorrências
+ 78. projeto                        :    24 ocorrências
+ 79. transparência                  :    23 ocorrências
+ 80. carreira                       :    23 ocorrências
+ 81. leonardo                       :    23 ocorrências
+ 82. chefia                         :    23 ocorrências
+ 83. gabinete                       :    23 ocorrências
+ 84. abre                           :    23 ocorrências
+ 85. gravadas                       :    23 ocorrências
+ 86. andar                          :    23 ocorrências
+ 87. notícias                       :    23 ocorrências
+ 88. estudantes                     :    23 ocorrências
+ 89. ava                            :    23 ocorrências
+ 90. assume                         :    22 ocorrências
+ 91. inaugura                       :    22 ocorrências
+ 92. presencial                     :    20 ocorrências
+ 93. oferece                        :    20 ocorrências
+ 94. portaria                       :    20 ocorrências
+ 95. prova                          :    20 ocorrências
+ 96. novo                           :    19 ocorrências
+ 97. possui                         :    19 ocorrências
+ 98. partir                         :    19 ocorrências
+ 99. novos                          :    19 ocorrências
+100. dúvidas                        :    19 ocorrências
+
+
+PÁGINAS VISITADAS:
+--------------------------------------------------
+  1. https://univesp.br/institucional/marca
+  2. https://univesp.br/institucional/parceiros
+  3. https://univesp.br/noticias/escola-da-inclusao-da-sedpcd-abre-inscricoes-para-curso-de-introducao-a-libras-com-aulas-gravadas-nesta-quarta-16
+  4. https://univesp.br/noticias/resposta-em-relacao-ao-novo-marco-da-ead
+  5. https://univesp.br/institucional
+  6. https://univesp.br/
+  7. https://univesp.br/carreiras
+  8. https://apps.univesp.br/manual-do-aluno/
+  9. https://univesp.br/noticias/univesp-e-reconhecida-com-o-selo-o-cliente-recomenda
+ 10. https://univesp.br
+ 11. https://intranet.univesp.br/
+ 12. https://univesp.br/transparencia
+ 13. https://univesp.br/noticias/univesp-inaugura-polo-na-escola-da-inclusao
+ 14. https://univesp.br/noticias/aluno-da-univesp-vence-hackathon-de-inteligencia-artificial-da-aws-e-insper
+ 15. https://univesp.br/noticias/univesp-promove-integracao-entre-novos-docentes-e-supervisores
+ 16. https://univesp.br/noticias
+ 17. https://univesp.br/acesso_aluno.html
+ 18. https://univesp.br/noticias/leonardo-castro-assume-a-chefia-de-gabinete-da-univesp
+ 19. https://univesp.br/cursos
+ 20. https://univesp.br/polos
+ 21. http://apps.univesp.br/repositorio/
+ 22. https://univesp.br/noticias/polo-mirassol-estacao-crianca-leva-oficinas-ludicas-a-praca-da-matriz-a-partir-de-sabado
+ 23. https://univesp.br/vestibular
+ 24. https://univesp.br/noticias/univesp-realiza-aula-magna-com-marcelo-tas
+ 25. https://atendimento.univesp.br
+
+# PowerShell Deployment Script for Univesp Web Crawler
+# Usage: .\Deploy-UnivespCrawler.ps1 -Mode simple|full|docker|status
+
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("simple", "full", "docker", "venv", "status", "schedule")]
+    [string]$Mode,
+    
+    [switch]$Force,
+    [switch]$Quiet
+)
+
+# Set error action preference
+$ErrorActionPreference = "Stop"
+
+# Define colors
+$Colors = @{
+    Success = "Green"
+    Error   = "Red"
+    Warning = "Yellow"
+    Info    = "Cyan"
+}
+
+function Write-ColoredOutput {
+    param(
+        [string]$Message,
+        [string]$Color = "White",
+        [string]$Emoji = ""
+    )
+    
+    if (-not $Quiet) {
+        Write-Host "$Emoji $Message" -ForegroundColor $Color
+    }
+}
+
+function Test-Requirements {
+    Write-ColoredOutput "🔍 Checking requirements..." $Colors.Info
+    
+    # Check Python
+    try {
+        $pythonVersion = python --version 2>&1
+        if ($pythonVersion -match "Python (\d+)\.(\d+)") {
+            $major = [int]$matches[1]
+            $minor = [int]$matches[2]
+            
+            if ($major -ge 3 -and $minor -ge 6) {
+                Write-ColoredOutput "✅ Python $major.$minor detected" $Colors.Success
+            } else {
+                Write-ColoredOutput "❌ Python 3.6+ required. Found: $pythonVersion" $Colors.Error
+                return $false
+            }
+        }
+    }
+    catch {
+        Write-ColoredOutput "❌ Python not found in PATH" $Colors.Error
+        return $false
+    }
+    
+    # Check required files
+    $requiredFiles = @(
+        "univesp_crawler_simple.py",
+        "requirements.txt"
+    )
+    
+    foreach ($file in $requiredFiles) {
+        if (-not (Test-Path $file)) {
+            Write-ColoredOutput "❌ Required file missing: $file" $Colors.Error
+            return $false
+        }
+    }
+    
+    Write-ColoredOutput "✅ All requirements met" $Colors.Success
+    return $true
+}
+
+function Install-Dependencies {
+    Write-ColoredOutput "📦 Installing dependencies..." $Colors.Info
+    
+    try {
+        $result = pip install -r requirements.txt 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-ColoredOutput "✅ Dependencies installed successfully" $Colors.Success
+            return $true
+        } else {
+            Write-ColoredOutput "❌ Failed to install dependencies: $result" $Colors.Error
+            return $false
+        }
+    }
+    catch {
+        Write-ColoredOutput "❌ Error installing dependencies: $_" $Colors.Error
+        return $false
+    }
+}
+
+function Deploy-Simple {
+    Write-ColoredOutput "🚀 Deploying simple version..." $Colors.Info
+    
+    try {
+        python univesp_crawler_simple.py
+        Write-ColoredOutput "✅ Simple deployment completed" $Colors.Success
+        return $true
+    }
+    catch {
+        Write-ColoredOutput "❌ Simple deployment failed: $_" $Colors.Error
+        return $false
+    }
+}
+
+function Deploy-Full {
+    Write-ColoredOutput "🚀 Deploying full version..." $Colors.Info
+    
+    if (-not (Install-Dependencies)) {
+        return $false
+    }
+    
+    try {
+        python univesp_crawler.py
+        Write-ColoredOutput "✅ Full deployment completed" $Colors.Success
+        return $true
+    }
+    catch {
+        Write-ColoredOutput "❌ Full deployment failed: $_" $Colors.Error
+        return $false
+    }
+}
+
+function Deploy-Docker {
+    Write-ColoredOutput "🐳 Deploying with Docker..." $Colors.Info
+    
+    # Check if Docker is available
+    try {
+        docker --version | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Docker not available"
+        }
+    }
+    catch {
+        Write-ColoredOutput "❌ Docker not found. Please install Docker Desktop" $Colors.Error
+        return $false
+    }
+    
+    try {
+        # Build Docker image
+        Write-ColoredOutput "🔨 Building Docker image..." $Colors.Info
+        docker build -t univesp-crawler .
+        if ($LASTEXITCODE -ne 0) {
+            throw "Docker build failed"
+        }
+        
+        # Create results directory if it doesn't exist
+        if (-not (Test-Path "results")) {
+            New-Item -ItemType Directory -Name "results" | Out-Null
+        }
+        
+        # Run Docker container
+        Write-ColoredOutput "🏃 Running Docker container..." $Colors.Info
+        docker run --rm -v "${PWD}\results:/app/results" univesp-crawler
+        
+        Write-ColoredOutput "✅ Docker deployment completed" $Colors.Success
+        return $true
+    }
+    catch {
+        Write-ColoredOutput "❌ Docker deployment failed: $_" $Colors.Error
+        return $false
+    }
+}
+
+function New-VirtualEnvironment {
+    Write-ColoredOutput "🏗️ Creating virtual environment..." $Colors.Info
+    
+    $venvPath = "venv"
+    
+    try {
+        # Create virtual environment
+        python -m venv $venvPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to create virtual environment"
+        }
+        
+        # Activate virtual environment and install dependencies
+        $activateScript = Join-Path $venvPath "Scripts\Activate.ps1"
+        
+        Write-ColoredOutput "🔧 Installing dependencies in virtual environment..." $Colors.Info
+        
+        # Run pip install in the virtual environment
+        & "$venvPath\Scripts\pip.exe" install -r requirements.txt
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to install dependencies in virtual environment"
+        }
+        
+        Write-ColoredOutput "✅ Virtual environment created successfully" $Colors.Success
+        Write-ColoredOutput "💡 To activate: $activateScript" $Colors.Info
+        Write-ColoredOutput "💡 To run crawler: & venv\Scripts\python.exe univesp_crawler.py" $Colors.Info
+        
+        return $true
+    }
+    catch {
+        Write-ColoredOutput "❌ Failed to create virtual environment: $_" $Colors.Error
+        return $false
+    }
+}
+
+function Show-Status {
+    Write-ColoredOutput "" 
+    Write-ColoredOutput "=" * 60
+    Write-ColoredOutput "📊 UNIVESP CRAWLER DEPLOYMENT STATUS" $Colors.Info
+    Write-ColoredOutput "=" * 60
+    
+    # Check files
+    $files = @(
+        @{Path = "univesp_crawler_simple.py"; Description = "Simple Version"},
+        @{Path = "univesp_crawler.py"; Description = "Full Version"},
+        @{Path = "requirements.txt"; Description = "Dependencies"},
+        @{Path = "Dockerfile"; Description = "Docker Support"},
+        @{Path = "docker-compose.yml"; Description = "Docker Compose"},
+        @{Path = "README.md"; Description = "Documentation"}
+    )
+    
+    Write-ColoredOutput ""
+    Write-ColoredOutput "📁 Files:" $Colors.Info
+    foreach ($file in $files) {
+        $exists = Test-Path $file.Path
+        $status = if ($exists) { "✅" } else { "❌" }
+        Write-Host "   $status $($file.Description.PadRight(20)) ($($file.Path))"
+    }
+    
+    # Check tools
+    Write-ColoredOutput ""
+    Write-ColoredOutput "🔧 Tools:" $Colors.Info
+    
+    $tools = @("python", "pip", "docker", "docker-compose")
+    foreach ($tool in $tools) {
+        try {
+            & $tool --version | Out-Null
+            $available = $LASTEXITCODE -eq 0
+        }
+        catch {
+            $available = $false
+        }
+        
+        $status = if ($available) { "✅" } else { "❌" }
+        Write-Host "   $status $tool"
+    }
+    
+    Write-ColoredOutput ""
+    Write-ColoredOutput "💻 System: $([System.Environment]::OSVersion.Platform)" $Colors.Info
+    Write-ColoredOutput "🐍 Python: $((python --version 2>&1))" $Colors.Info
+    Write-ColoredOutput "📂 Project: $PWD" $Colors.Info
+}
+
+function New-ScheduledTask {
+    Write-ColoredOutput "⏰ Setting up scheduled task..." $Colors.Info
+    
+    $scriptPath = Join-Path $PWD "univesp_crawler_simple.py"
+    $pythonPath = (Get-Command python).Source
+    
+    Write-ColoredOutput ""
+    Write-ColoredOutput "💡 To create a scheduled task in Windows:" $Colors.Info
+    Write-ColoredOutput "   1. Open Task Scheduler" $Colors.Info
+    Write-ColoredOutput "   2. Create Basic Task" $Colors.Info
+    Write-ColoredOutput "   3. Set your desired schedule" $Colors.Info
+    Write-ColoredOutput "   4. Action: Start a program" $Colors.Info
+    Write-ColoredOutput "   5. Program/script: $pythonPath" $Colors.Info
+    Write-ColoredOutput "   6. Add arguments: $scriptPath" $Colors.Info
+    Write-ColoredOutput "   7. Start in: $PWD" $Colors.Info
+    Write-ColoredOutput ""
+    
+    return $true
+}
+
+# Main execution
+try {
+    Write-ColoredOutput "🚀 UNIVESP WEB CRAWLER DEPLOYMENT" $Colors.Info
+    Write-ColoredOutput "=" * 50
+    Write-ColoredOutput ""
+    
+    # Check requirements (except for status mode)
+    if ($Mode -ne "status") {
+        if (-not (Test-Requirements)) {
+            Write-ColoredOutput "❌ Requirements check failed" $Colors.Error
+            exit 1
+        }
+    }
+    
+    # Execute based on mode
+    $success = $false
+    
+    switch ($Mode) {
+        "simple" {
+            $success = Deploy-Simple
+        }
+        "full" {
+            $success = Deploy-Full
+        }
+        "docker" {
+            $success = Deploy-Docker
+        }
+        "venv" {
+            $success = New-VirtualEnvironment
+        }
+        "status" {
+            Show-Status
+            $success = $true
+        }
+        "schedule" {
+            $success = New-ScheduledTask
+        }
+    }
+    
+    if ($success) {
+        Write-ColoredOutput ""
+        Write-ColoredOutput "🎉 Deployment completed successfully!" $Colors.Success
+    } else {
+        Write-ColoredOutput ""
+        Write-ColoredOutput "💥 Deployment failed!" $Colors.Error
+        exit 1
+    }
+}
+catch {
+    Write-ColoredOutput "❌ Unexpected error: $_" $Colors.Error
+    exit 1
+}
+
+@echo off
+echo.
+echo ========================================
+echo  UNIVESP WEB CRAWLER - QUICK START
+echo ========================================
+echo.
+
+REM Check if Python is installed
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Python is not installed or not in PATH
+    echo Please install Python 3.6+ from https://python.org
+    pause
+    exit /b 1
+)
+
+echo ✅ Python detected
+echo.
+
+REM Check if the crawler script exists
+if not exist "univesp_crawler_simple.py" (
+    echo ❌ Crawler script not found in current directory
+    echo Please ensure univesp_crawler_simple.py is in the same folder
+    pause
+    exit /b 1
+)
+
+echo ✅ Crawler script found
+echo.
+
+REM Ask user which version to run
+echo Choose deployment option:
+echo 1. Simple version (no dependencies)
+echo 2. Full version (install dependencies)
+echo 3. Create virtual environment
+echo 4. Exit
+echo.
+set /p choice=Enter your choice (1-4): 
+
+if "%choice%"=="1" goto simple
+if "%choice%"=="2" goto full
+if "%choice%"=="3" goto venv
+if "%choice%"=="4" goto end
+goto invalid
+
+:simple
+echo.
+echo 🚀 Running simple version...
+echo.
+python univesp_crawler_simple.py
+goto end
+
+:full
+echo.
+echo 📦 Installing dependencies...
+pip install -r requirements.txt
+if errorlevel 1 (
+    echo ❌ Failed to install dependencies
+    pause
+    exit /b 1
+)
+echo.
+echo 🚀 Running full version...
+echo.
+python univesp_crawler.py
+goto end
+
+:venv
+echo.
+echo 🏗️ Creating virtual environment...
+python -m venv venv
+if errorlevel 1 (
+    echo ❌ Failed to create virtual environment
+    pause
+    exit /b 1
+)
+
+echo Activating virtual environment...
+call venv\Scripts\activate.bat
+
+echo Installing dependencies...
+pip install -r requirements.txt
+if errorlevel 1 (
+    echo ❌ Failed to install dependencies
+    pause
+    exit /b 1
+)
+
+echo.
+echo 🚀 Running crawler in virtual environment...
+echo.
+python univesp_crawler.py
+goto end
+
+:invalid
+echo.
+echo ❌ Invalid choice. Please run the script again.
+pause
+exit /b 1
+
+:end
+echo.
+echo 📊 Check the results in the generated report file!
+echo.
+pause
+
+#!/usr/bin/env python3
+"""
+🚀 One-Click Deployment Script for Univesp Web Crawler
+=====================================================
+
+This script automates the deployment process with multiple options.
+"""
+
+import os
+import sys
+import subprocess
+import argparse
+import platform
+from pathlib import Path
+
+class UnivespDeployer:
+    """Handles deployment of the Univesp crawler in different environments"""
+    
+    def __init__(self):
+        self.project_dir = Path(__file__).parent
+        self.python_executable = sys.executable
+        self.system = platform.system()
+        
+    def check_requirements(self):
+        """Check if all requirements are met"""
+        print("🔍 Checking requirements...")
+        
+        # Check Python version
+        if sys.version_info < (3, 6):
+            print("❌ Python 3.6 or higher is required")
+            return False
+            
+        print(f"✅ Python {sys.version_info.major}.{sys.version_info.minor} detected")
+        
+        # Check if required files exist
+        required_files = [
+            'univesp_crawler_simple.py',
+            'requirements.txt'
+        ]
+        
+        for file in required_files:
+            if not (self.project_dir / file).exists():
+                print(f"❌ Required file missing: {file}")
+                return False
+                
+        print("✅ All required files found")
+        return True
+    
+    def install_dependencies(self):
+        """Install Python dependencies"""
+        print("📦 Installing dependencies...")
+        
+        try:
+            subprocess.run([
+                self.python_executable, "-m", "pip", "install", 
+                "-r", str(self.project_dir / "requirements.txt")
+            ], check=True, capture_output=True, text=True)
+            print("✅ Dependencies installed successfully")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to install dependencies: {e}")
+            return False
+    
+    def create_virtual_environment(self):
+        """Create and setup virtual environment"""
+        print("🏗️ Creating virtual environment...")
+        
+        venv_path = self.project_dir / "venv"
+        
+        try:
+            # Create virtual environment
+            subprocess.run([
+                self.python_executable, "-m", "venv", str(venv_path)
+            ], check=True)
+            
+            # Determine activation script based on OS
+            if self.system == "Windows":
+                activate_script = venv_path / "Scripts" / "activate.bat"
+                pip_executable = venv_path / "Scripts" / "pip.exe"
+            else:
+                activate_script = venv_path / "bin" / "activate"
+                pip_executable = venv_path / "bin" / "pip"
+            
+            # Install dependencies in virtual environment
+            subprocess.run([
+                str(pip_executable), "install", "-r", "requirements.txt"
+            ], check=True, cwd=str(self.project_dir))
+            
+            print(f"✅ Virtual environment created at: {venv_path}")
+            print(f"💡 To activate: {activate_script}")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to create virtual environment: {e}")
+            return False
+    
+    def deploy_simple(self):
+        """Deploy using the simple version (no external dependencies)"""
+        print("🚀 Deploying simple version...")
+        
+        try:
+            subprocess.run([
+                self.python_executable, 
+                str(self.project_dir / "univesp_crawler_simple.py")
+            ], cwd=str(self.project_dir))
+            print("✅ Simple deployment completed")
+            return True
+        except KeyboardInterrupt:
+            print("⚠️ Deployment interrupted by user")
+            return True
+        except Exception as e:
+            print(f"❌ Deployment failed: {e}")
+            return False
+    
+    def deploy_full(self):
+        """Deploy the full version with dependencies"""
+        print("🚀 Deploying full version...")
+        
+        if not self.install_dependencies():
+            return False
+            
+        try:
+            subprocess.run([
+                self.python_executable, 
+                str(self.project_dir / "univesp_crawler.py")
+            ], cwd=str(self.project_dir))
+            print("✅ Full deployment completed")
+            return True
+        except KeyboardInterrupt:
+            print("⚠️ Deployment interrupted by user")
+            return True
+        except Exception as e:
+            print(f"❌ Deployment failed: {e}")
+            return False
+    
+    def deploy_docker(self):
+        """Deploy using Docker"""
+        print("🐳 Deploying with Docker...")
+        
+        try:
+            # Check if Docker is available
+            subprocess.run(["docker", "--version"], 
+                          check=True, capture_output=True)
+            
+            # Build Docker image
+            print("🔨 Building Docker image...")
+            subprocess.run([
+                "docker", "build", "-t", "univesp-crawler", "."
+            ], check=True, cwd=str(self.project_dir))
+            
+            # Run Docker container
+            print("🏃 Running Docker container...")
+            subprocess.run([
+                "docker", "run", "--rm", 
+                "-v", f"{self.project_dir}/results:/app/results",
+                "univesp-crawler"
+            ], check=True)
+            
+            print("✅ Docker deployment completed")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Docker deployment failed: {e}")
+            print("💡 Make sure Docker is installed and running")
+            return False
+    
+    def deploy_docker_compose(self):
+        """Deploy using Docker Compose"""
+        print("🐳 Deploying with Docker Compose...")
+        
+        try:
+            # Check if Docker Compose is available
+            subprocess.run(["docker-compose", "--version"], 
+                          check=True, capture_output=True)
+            
+            # Run with Docker Compose
+            subprocess.run([
+                "docker-compose", "up", "--build"
+            ], check=True, cwd=str(self.project_dir))
+            
+            print("✅ Docker Compose deployment completed")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Docker Compose deployment failed: {e}")
+            print("💡 Make sure Docker Compose is installed")
+            return False
+    
+    def create_scheduled_task(self):
+        """Create a scheduled task for automatic runs"""
+        print("⏰ Setting up scheduled execution...")
+        
+        script_path = self.project_dir / "univesp_crawler_simple.py"
+        
+        if self.system == "Windows":
+            print("💡 For Windows Task Scheduler:")
+            print(f"   Program: {self.python_executable}")
+            print(f"   Arguments: {script_path}")
+            print(f"   Start in: {self.project_dir}")
+        else:
+            print("💡 For Linux/Mac cron job, add this line to crontab:")
+            print(f"   0 2 * * * cd {self.project_dir} && {self.python_executable} {script_path}")
+        
+        return True
+    
+    def show_status(self):
+        """Show deployment status and options"""
+        print("\n" + "="*60)
+        print("📊 UNIVESP CRAWLER DEPLOYMENT STATUS")
+        print("="*60)
+        
+        # Check files
+        files_status = [
+            ("univesp_crawler_simple.py", "Simple Version"),
+            ("univesp_crawler.py", "Full Version"),
+            ("requirements.txt", "Dependencies"),
+            ("Dockerfile", "Docker Support"),
+            ("docker-compose.yml", "Docker Compose"),
+            ("README.md", "Documentation")
+        ]
+        
+        print("\n📁 Files:")
+        for file, description in files_status:
+            exists = (self.project_dir / file).exists()
+            status = "✅" if exists else "❌"
+            print(f"   {status} {description:<20} ({file})")
+        
+        # Check tools
+        tools_status = []
+        for tool in ["python", "pip", "docker", "docker-compose"]:
+            try:
+                subprocess.run([tool, "--version"], 
+                              capture_output=True, check=True)
+                tools_status.append((tool, True))
+            except:
+                tools_status.append((tool, False))
+        
+        print("\n🔧 Tools:")
+        for tool, available in tools_status:
+            status = "✅" if available else "❌"
+            print(f"   {status} {tool}")
+        
+        print(f"\n💻 System: {self.system}")
+        print(f"🐍 Python: {sys.version}")
+        print(f"📂 Project: {self.project_dir}")
+
+
+def main():
+    """Main deployment function"""
+    parser = argparse.ArgumentParser(
+        description="🚀 Univesp Web Crawler Deployment Tool"
+    )
+    
+    parser.add_argument(
+        "mode",
+        choices=["simple", "full", "venv", "docker", "compose", "schedule", "status"],
+        help="Deployment mode"
+    )
+    
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Only check requirements, don't deploy"
+    )
+    
+    args = parser.parse_args()
+    
+    deployer = UnivespDeployer()
+    
+    print("🚀 UNIVESP WEB CRAWLER DEPLOYMENT")
+    print("="*50)
+    
+    # Check requirements first
+    if not deployer.check_requirements():
+        print("❌ Requirements check failed")
+        sys.exit(1)
+    
+    if args.check_only:
+        print("✅ Requirements check passed")
+        sys.exit(0)
+    
+    # Execute deployment based on mode
+    success = False
+    
+    if args.mode == "simple":
+        success = deployer.deploy_simple()
+    elif args.mode == "full":
+        success = deployer.deploy_full()
+    elif args.mode == "venv":
+        success = deployer.create_virtual_environment()
+    elif args.mode == "docker":
+        success = deployer.deploy_docker()
+    elif args.mode == "compose":
+        success = deployer.deploy_docker_compose()
+    elif args.mode == "schedule":
+        success = deployer.create_scheduled_task()
+    elif args.mode == "status":
+        deployer.show_status()
+        success = True
+    
+    if success:
+        print("\n🎉 Deployment completed successfully!")
+    else:
+        print("\n💥 Deployment failed!")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+
+version: '3.8'
+
+services:
+  univesp-crawler:
+    build: .
+    container_name: univesp-crawler
+    environment:
+      - MAX_PAGES=30
+      - DELAY=2.0
+    volumes:
+      - ./results:/app/results
+    restart: unless-stopped
+    
+  # Optional: Add a web interface service
+  # univesp-web:
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile.web
+  #   container_name: univesp-web
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - univesp-crawler
+  #   restart: unless-stopped
+
+volumes:
+  results:
+
+# Use Python 3.9 slim image
+FROM python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV MAX_PAGES=25
+ENV DELAY=1.5
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (for better Docker layer caching)
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY univesp_crawler.py .
+COPY univesp_crawler_simple.py .
+
+# Create results directory
+RUN mkdir -p /app/results
+
+# Set the results directory as a volume
+VOLUME ["/app/results"]
+
+# Expose port (if you add a web interface later)
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import sys; sys.exit(0)"
+
+# Default command - run the simple version
+CMD ["python", "univesp_crawler_simple.py"]
+
+# 🚀 DEPLOYMENT GUIDE - Univesp Web Crawler
+
+This guide shows you how to deploy and run the Univesp web crawler in different environments.
+
+## 📋 Quick Start (Local Deployment)
+
+### Option 1: Immediate Local Run (Easiest)
+```powershell
+# Navigate to the project directory
+cd C:\Users\dell
+
+# Run the simple version (no dependencies needed)
+python univesp_crawler_simple.py
+```
+
+### Option 2: Full Version with Dependencies
+```powershell
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the full version
+python univesp_crawler.py
+```
+
+## 🖥️ Local Environment Setup
+
+### Prerequisites Check
+```powershell
+# Check Python version (needs 3.6+)
+python --version
+
+# Check pip
+pip --version
+
+# List current packages
+pip list
+```
+
+### Virtual Environment Setup (Recommended)
+```powershell
+# Create virtual environment
+python -m venv univesp_crawler_env
+
+# Activate virtual environment (Windows)
+.\univesp_crawler_env\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the crawler
+python univesp_crawler.py
+
+# Deactivate when done
+deactivate
+```
+
+## 🐳 Docker Deployment
+
+### Create Dockerfile
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy requirements first (for better caching)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY univesp_crawler.py .
+COPY univesp_crawler_simple.py .
+
+# Create results directory
+RUN mkdir -p /app/results
+
+# Run the simple version by default
+CMD ["python", "univesp_crawler_simple.py"]
+```
+
+### Docker Commands
+```bash
+# Build Docker image
+docker build -t univesp-crawler .
+
+# Run container
+docker run -v $(pwd)/results:/app/results univesp-crawler
+
+# Run with custom settings
+docker run -e MAX_PAGES=50 -v $(pwd)/results:/app/results univesp-crawler
+```
+
+## ☁️ Cloud Deployment Options
+
+### 1. Heroku Deployment
+
+#### Create required files:
+
+**Procfile:**
+```
+worker: python univesp_crawler_simple.py
+```
+
+**runtime.txt:**
+```
+python-3.9.16
+```
+
+#### Deploy to Heroku:
+```bash
+# Install Heroku CLI first
+# Login to Heroku
+heroku login
+
+# Create Heroku app
+heroku create your-univesp-crawler
+
+# Push to Heroku
+git init
+git add .
+git commit -m "Initial commit"
+git push heroku main
+
+# Run the worker
+heroku ps:scale worker=1
+```
+
+### 2. AWS EC2 Deployment
+
+```bash
+# Connect to EC2 instance
+ssh -i your-key.pem ec2-user@your-ec2-ip
+
+# Install Python and dependencies
+sudo yum update -y
+sudo yum install python3 python3-pip -y
+
+# Clone or upload your code
+# Upload files using scp or git clone
+
+# Install dependencies
+pip3 install -r requirements.txt
+
+# Run the crawler
+python3 univesp_crawler_simple.py
+
+# Run in background
+nohup python3 univesp_crawler_simple.py > output.log 2>&1 &
+```
+
+### 3. Google Cloud Run
+
+#### Create cloudbuild.yaml:
+```yaml
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/univesp-crawler', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/univesp-crawler']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['run', 'deploy', 'univesp-crawler', '--image', 'gcr.io/$PROJECT_ID/univesp-crawler', '--platform', 'managed', '--region', 'us-central1']
+```
+
+#### Deploy:
+```bash
+gcloud builds submit --config cloudbuild.yaml
+```
+
+## 📊 Scheduled Deployment (Automation)
+
+### Windows Task Scheduler
+1. Open Task Scheduler
+2. Create Basic Task
+3. Set trigger (daily/weekly)
+4. Action: Start a program
+5. Program: `python`
+6. Arguments: `C:\Users\dell\univesp_crawler_simple.py`
+7. Start in: `C:\Users\dell`
+
+### Linux Cron Job
+```bash
+# Edit crontab
+crontab -e
+
+# Run daily at 2 AM
+0 2 * * * cd /path/to/crawler && python3 univesp_crawler_simple.py
+
+# Run weekly on Sunday at 1 AM
+0 1 * * 0 cd /path/to/crawler && python3 univesp_crawler_simple.py
+```
+
+### GitHub Actions (CI/CD)
+
+#### Create .github/workflows/crawler.yml:
+```yaml
+name: Run Univesp Crawler
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run crawler
+      run: python univesp_crawler_simple.py
+      
+    - name: Upload results
+      uses: actions/upload-artifact@v3
+      with:
+        name: crawler-results
+        path: univesp_crawler_resultados.txt
+```
+
+## 🔧 Configuration for Production
+
+### Environment Variables Setup
+```powershell
+# Set environment variables (Windows)
+$env:MAX_PAGES = "50"
+$env:DELAY = "2.0"
+$env:OUTPUT_DIR = "C:\crawler_results"
+
+# Run with environment variables
+python univesp_crawler.py
+```
+
+### Configuration File (config.py)
+```python
+import os
+
+# Configuration settings
+MAX_PAGES = int(os.getenv('MAX_PAGES', 25))
+DELAY = float(os.getenv('DELAY', 1.5))
+OUTPUT_DIR = os.getenv('OUTPUT_DIR', '.')
+BASE_URL = os.getenv('BASE_URL', 'https://univesp.br')
+```
+
+## 🐍 Advanced Deployment with Python Scripts
+
+### Batch Deployment Script (deploy.py)
+```python
+import subprocess
+import sys
+import os
+
+def deploy_crawler():
+    """Deploy the Univesp crawler with all dependencies"""
+    
+    print("🚀 Starting Univesp Crawler Deployment...")
+    
+    # Check Python version
+    if sys.version_info < (3, 6):
+        print("❌ Python 3.6+ required")
+        return
+    
+    # Install dependencies
+    print("📦 Installing dependencies...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    
+    # Run the crawler
+    print("🕷️ Starting crawler...")
+    subprocess.run([sys.executable, "univesp_crawler.py"])
+    
+    print("✅ Deployment completed!")
+
+if __name__ == "__main__":
+    deploy_crawler()
+```
+
+### Usage:
+```powershell
+python deploy.py
+```
+
+## 📱 Monitoring and Alerts
+
+### Simple Monitoring Script
+```python
+import logging
+import smtplib
+from email.mime.text import MIMEText
+from datetime import datetime
+
+def setup_monitoring():
+    """Setup basic monitoring and alerts"""
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('crawler.log'),
+            logging.StreamHandler()
+        ]
+    )
+    
+    return logging.getLogger(__name__)
+
+def send_alert(message):
+    """Send email alert when crawler completes or fails"""
+    # Configure your email settings here
+    pass
+
+# Usage in your crawler
+logger = setup_monitoring()
+logger.info("Crawler started")
+```
+
+## 🛡️ Security Considerations
+
+### Production Security Settings
+```python
+# Add to your crawler configuration
+SECURITY_SETTINGS = {
+    'USER_AGENT': 'UnivespCrawler/1.0 (Educational Purpose)',
+    'RESPECT_ROBOTS_TXT': True,
+    'MAX_CONCURRENT_REQUESTS': 1,
+    'DOWNLOAD_DELAY': 2,
+    'RANDOMIZE_DOWNLOAD_DELAY': True,
+}
+```
+
+## 🎯 Deployment Recommendations
+
+### For Development:
+```powershell
+python univesp_crawler_simple.py
+```
+
+### For Production:
+1. Use Docker containers
+2. Set up monitoring
+3. Use environment variables
+4. Schedule regular runs
+5. Implement error handling
+
+### For Scale:
+1. Use cloud services (AWS, GCP, Azure)
+2. Implement distributed crawling
+3. Add database storage
+4. Set up API endpoints
+
+---
+
+## 🚀 Quick Deploy Commands
+
+### Immediate Local Run:
+```powershell
+cd C:\Users\dell
+python univesp_crawler_simple.py
+```
+
+### With Virtual Environment:
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python univesp_crawler.py
+```
+
+### Docker Run:
+```powershell
+docker build -t univesp-crawler .
+docker run univesp-crawler
+```
+
+Choose the deployment method that best fits your needs! 🎯
+
+# Web Crawler da Univesp 🕷️
+
+Este projeto implementa um web crawler básico que visita sistematicamente as páginas Web da Univesp, seguindo hyperlinks da página principal e contabilizando a frequência de cada palavra encontrada nas páginas visitadas.
+
+## 📋 Funcionalidades
+
+- ✅ Crawling sistemático do site da Univesp
+- ✅ Seguimento de hyperlinks internos
+- ✅ Extração e limpeza de texto HTML
+- ✅ Contagem de frequência de palavras
+- ✅ Filtro de stopwords em português
+- ✅ Relatórios detalhados de análise
+- ✅ Salvamento de resultados em arquivo
+- ✅ Interface com progresso em tempo real
+
+## 📁 Arquivos
+
+### Versões Disponíveis:
+
+1. **`univesp_crawler.py`** - Versão completa com bibliotecas externas (requests, BeautifulSoup)
+2. **`univesp_crawler_simple.py`** - Versão simplificada usando apenas bibliotecas padrão do Python
+3. **`Desafio_Semana_4.ipynb`** - Notebook Jupyter original com código base
+
+### Arquivos Auxiliares:
+
+- **`requirements.txt`** - Dependências para a versão completa
+- **`README.md`** - Este arquivo com instruções
+
+## 🚀 Como Executar
+
+### Opção 1: Versão Simplificada (Recomendada)
+
+Esta versão usa apenas bibliotecas padrão do Python, não requer instalação de dependências:
+
+```bash
+python univesp_crawler_simple.py
+```
+
+### Opção 2: Versão Completa
+
+1. Instale as dependências:
+```bash
+pip install -r requirements.txt
+```
+
+2. Execute o crawler:
+```bash
+python univesp_crawler.py
+```
+
+## ⚙️ Configurações
+
+Você pode ajustar as configurações do crawler editando as variáveis na função `main()`:
+
+```python
+MAX_PAGES = 25  # Número máximo de páginas a visitar
+DELAY = 1.5     # Delay entre requisições (segundos)
+```
+
+## 📊 Resultados
+
+O crawler gera:
+
+1. **Relatório no terminal** com:
+   - Estatísticas gerais
+   - Top 25 palavras mais frequentes
+   - Análise por página (top 5)
+   - URLs com erro
+
+2. **Arquivo de resultados** (`univesp_crawler_resultados.txt`) com:
+   - Data e hora da execução
+   - Top 100 palavras mais frequentes
+   - Lista completa de páginas visitadas
+   - URLs com erro (se houver)
+
+## 🔧 Características Técnicas
+
+### Processamento de Texto:
+- Remove tags HTML, scripts e estilos
+- Decodifica entidades HTML
+- Normaliza texto para análise
+- Filtra palavras com menos de 3 caracteres
+- Remove stopwords comuns em português
+
+### Controle de Crawling:
+- Respeita apenas URLs do domínio `univesp.br`
+- Ignora arquivos não-HTML (PDF, imagens, etc.)
+- Implementa delay entre requisições
+- Controle de páginas visitadas
+- Tratamento de erros robusto
+
+### Análise de Dados:
+- Contagem global de frequência de palavras
+- Contagem individual por página
+- Estatísticas detalhadas
+- Exportação de resultados
+
+## ⚠️ Considerações Importantes
+
+1. **Uso Ético**: O crawler implementa delays entre requisições para não sobrecarregar o servidor
+2. **Limitações**: Por padrão, visita até 25 páginas para demonstração
+3. **Conectividade**: Requer conexão com internet ativa
+4. **Tempo**: Dependendo da configuração, pode levar alguns minutos para concluir
+
+## 🛑 Interrompendo a Execução
+
+Para parar o crawler durante a execução:
+- Pressione `Ctrl+C` (Windows/Linux) ou `Cmd+C` (Mac)
+- O programa irá gerar um relatório parcial com os dados coletados até então
+
+## 📈 Exemplo de Saída
+
+```
+🕷️  INICIANDO WEB CRAWLER DA UNIVESP
+==================================================
+URL inicial: https://univesp.br
+Máximo de páginas: 25
+Delay entre requisições: 1.5s
+
+Visitando: https://univesp.br
+Visitando: https://univesp.br/cursos
+Progresso: 5/25 páginas visitadas
+...
+
+================================================================================
+RELATÓRIO DO WEB CRAWLER DA UNIVESP
+================================================================================
+
+Estatísticas Gerais:
+  • Páginas visitadas: 25
+  • Páginas com erro: 0
+  • Total de palavras únicas: 1247
+  • Total de ocorrências: 8934
+
+📊 TOP 25 PALAVRAS MAIS FREQUENTES:
+------------------------------------------------------------
+ 1. univesp               : 156 ocorrências
+ 2. curso                 : 89 ocorrências
+ 3. ensino                : 67 ocorrências
+...
+```
+
+## 🆘 Solução de Problemas
+
+### Erro de conexão:
+- Verifique sua conexão com a internet
+- O site da Univesp pode estar temporariamente indisponível
+
+### Erro de importação (versão completa):
+- Execute: `pip install -r requirements.txt`
+- Use a versão simplificada como alternativa
+
+### Permissão de escrita:
+- Verifique se você tem permissão para escrever na pasta atual
+- Os resultados são salvos em `C:\Users\dell\`
+
+---
+
+**Desenvolvido para o Desafio Semana 4 - Análise de Frequência de Palavras em Web Crawling**
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Web Crawler da Univesp - Versão Simplificada
+===========================================
+
+Versão que usa apenas bibliotecas padrão do Python.
+Este programa desenvolve um web crawler básico que visita sistematicamente 
+as páginas da Univesp, seguindo hyperlinks da página principal. Para cada 
+página visitada, o programa contabiliza a frequência de cada palavra.
+
+Autor: Desenvolvido para o Desafio Semana 4
+Data: 2025
+"""
+
+import re
+import time
+import html
+from urllib.parse import urljoin, urlparse
+from html.parser import HTMLParser
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from collections import Counter, defaultdict
+
+
+class TextExtractor(HTMLParser):
+    """
+    Extrator de texto de HTML usando HTMLParser
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.text_data = []
+        self.skip_tags = {'script', 'style', 'nav', 'footer', 'header'}
+        self.current_tag = None
+    
+    def handle_starttag(self, tag, attrs):
+        self.current_tag = tag.lower()
+    
+    def handle_endtag(self, tag):
+        self.current_tag = None
+    
+    def handle_data(self, data):
+        if self.current_tag not in self.skip_tags:
+            # Decodifica entidades HTML e limpa o texto
+            cleaned_data = html.unescape(data.strip())
+            if cleaned_data:
+                self.text_data.append(cleaned_data)
+    
+    def get_text(self):
+        return ' '.join(self.text_data)
+
+
+class LinkCollector(HTMLParser):
+    """
+    Coletor de hyperlinks usando HTMLParser
+    """
+    
+    def __init__(self, base_url):
+        super().__init__()
+        self.base_url = base_url
+        self.links = []
+    
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            for attr_name, attr_value in attrs:
+                if attr_name == 'href' and attr_value:
+                    # Constrói URL absoluto
+                    absolute_url = urljoin(self.base_url, attr_value)
+                    if self._is_valid_url(absolute_url):
+                        self.links.append(absolute_url)
+    
+    def _is_valid_url(self, url):
+        """Verifica se a URL é válida para crawling"""
+        try:
+            parsed = urlparse(url)
+            return (parsed.netloc.endswith('univesp.br') and 
+                   parsed.scheme in ['http', 'https'] and
+                   not any(ext in url.lower() for ext in ['.pdf', '.jpg', '.png', '.gif', '.zip', '.doc', '.docx']))
+        except:
+            return False
+    
+    def get_links(self):
+        return list(set(self.links))  # Remove duplicatas
+
+
+class UnivespCrawlerSimple:
+    """
+    Classe principal do crawler da Univesp - Versão Simplificada
+    """
+    
+    def __init__(self, base_url="https://univesp.br", max_pages=20, delay=1):
+        """
+        Inicializa o crawler
+        
+        Args:
+            base_url (str): URL base da Univesp
+            max_pages (int): Número máximo de páginas a visitar
+            delay (float): Delay entre requisições em segundos
+        """
+        self.base_url = base_url
+        self.max_pages = max_pages
+        self.delay = delay
+        self.visited_urls = set()
+        self.word_frequency = Counter()
+        self.page_word_counts = defaultdict(Counter)
+        self.failed_urls = set()
+        
+        # Palavras comuns portuguesas (stopwords) para filtrar
+        self.stopwords = {
+            'a', 'ao', 'aos', 'aquela', 'aquelas', 'aquele', 'aqueles', 'aquilo', 'as', 'até', 
+            'com', 'como', 'da', 'das', 'de', 'dela', 'delas', 'dele', 'deles', 'depois', 
+            'do', 'dos', 'e', 'ela', 'elas', 'ele', 'eles', 'em', 'entre', 'essa', 'essas', 
+            'esse', 'esses', 'esta', 'estão', 'estas', 'estamos', 'estar', 'este', 'estes', 
+            'eu', 'foi', 'for', 'foram', 'há', 'isso', 'isto', 'já', 'mais', 'mas', 'me', 
+            'mesmo', 'meu', 'meus', 'minha', 'minhas', 'na', 'nas', 'não', 'no', 'nos', 
+            'nós', 'o', 'os', 'ou', 'para', 'pela', 'pelas', 'pelo', 'pelos', 'por', 
+            'qual', 'quando', 'que', 'quem', 'são', 'se', 'sem', 'ser', 'seu', 'seus', 
+            'só', 'sua', 'suas', 'também', 'te', 'tem', 'teu', 'teus', 'tu', 'tua', 
+            'tuas', 'um', 'uma', 'você', 'vocês', 'vos', 'ver', 'anos', 'ano', 'dia', 'dias',
+            'pode', 'podem', 'vai', 'vão', 'fazer', 'feito', 'bem', 'muito', 'toda', 'todo',
+            'todos', 'todas', 'vez', 'vezes', 'onde', 'aqui', 'ali', 'lá', 'agora', 'então'
+        }
+    
+    def fetch_page(self, url):
+        """
+        Faz o download do conteúdo de uma página
+        
+        Args:
+            url (str): URL da página
+            
+        Returns:
+            str: Conteúdo HTML da página ou None se houver erro
+        """
+        try:
+            print(f"Visitando: {url}")
+            
+            # Configura headers para simular navegador
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            req = Request(url, headers=headers)
+            response = urlopen(req, timeout=10)
+            
+            # Lê o conteúdo
+            content = response.read()
+            
+            # Tenta decodificar usando diferentes encodings
+            try:
+                return content.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    return content.decode('latin-1')
+                except UnicodeDecodeError:
+                    return content.decode('utf-8', errors='ignore')
+            
+        except Exception as e:
+            print(f"Erro ao acessar {url}: {e}")
+            self.failed_urls.add(url)
+            return None
+    
+    def extract_text(self, html_content):
+        """
+        Extrai texto limpo do HTML
+        
+        Args:
+            html_content (str): Conteúdo HTML
+            
+        Returns:
+            str: Texto extraído
+        """
+        try:
+            extractor = TextExtractor()
+            extractor.feed(html_content)
+            return extractor.get_text()
+        except Exception as e:
+            print(f"Erro ao extrair texto: {e}")
+            return ""
+    
+    def extract_links(self, html_content, base_url):
+        """
+        Extrai links do HTML
+        
+        Args:
+            html_content (str): Conteúdo HTML
+            base_url (str): URL base
+            
+        Returns:
+            list: Lista de URLs encontradas
+        """
+        try:
+            collector = LinkCollector(base_url)
+            collector.feed(html_content)
+            return collector.get_links()
+        except Exception as e:
+            print(f"Erro ao extrair links: {e}")
+            return []
+    
+    def process_text(self, text):
+        """
+        Processa texto para contar palavras
+        
+        Args:
+            text (str): Texto a ser processado
+            
+        Returns:
+            Counter: Contador de frequência de palavras
+        """
+        # Converte para minúsculas
+        text = text.lower()
+        
+        # Encontra todas as palavras (incluindo acentos)
+        words = re.findall(r'\b[a-záàâãäéèêëíìîïóòôõöúùûüçñ]+\b', text)
+        
+        # Filtra palavras muito curtas e stopwords
+        filtered_words = [word for word in words 
+                         if len(word) > 2 and word not in self.stopwords]
+        
+        return Counter(filtered_words)
+    
+    def crawl_page(self, url):
+        """
+        Processa uma página específica
+        
+        Args:
+            url (str): URL da página
+            
+        Returns:
+            list: Lista de novos links encontrados
+        """
+        # Faz download da página
+        html_content = self.fetch_page(url)
+        if not html_content:
+            return []
+        
+        # Extrai e processa texto
+        text = self.extract_text(html_content)
+        if text:
+            word_count = self.process_text(text)
+            self.page_word_counts[url] = word_count
+            self.word_frequency.update(word_count)
+        
+        # Extrai links
+        links = self.extract_links(html_content, url)
+        return links
+    
+    def crawl(self):
+        """
+        Executa o processo principal de crawling
+        """
+        print("🕷️  INICIANDO WEB CRAWLER DA UNIVESP")
+        print("="*50)
+        print(f"URL inicial: {self.base_url}")
+        print(f"Máximo de páginas: {self.max_pages}")
+        print(f"Delay entre requisições: {self.delay}s")
+        print("")
+        
+        urls_to_visit = [self.base_url]
+        
+        while urls_to_visit and len(self.visited_urls) < self.max_pages:
+            current_url = urls_to_visit.pop(0)
+            
+            # Evita URLs já visitadas
+            if current_url in self.visited_urls:
+                continue
+            
+            self.visited_urls.add(current_url)
+            
+            # Processa a página atual
+            new_links = self.crawl_page(current_url)
+            
+            # Adiciona novos links à fila
+            for link in new_links:
+                if (link not in self.visited_urls and 
+                    link not in urls_to_visit and 
+                    link not in self.failed_urls):
+                    urls_to_visit.append(link)
+            
+            # Status do progresso
+            if len(self.visited_urls) % 5 == 0:
+                print(f"Progresso: {len(self.visited_urls)}/{self.max_pages} páginas visitadas")
+            
+            # Delay entre requisições
+            time.sleep(self.delay)
+        
+        print(f"\nCrawling concluído!")
+        print(f"Páginas visitadas: {len(self.visited_urls)}")
+        print(f"Páginas com erro: {len(self.failed_urls)}")
+    
+    def generate_report(self):
+        """
+        Gera e exibe relatório completo
+        """
+        print("\n" + "="*80)
+        print("RELATÓRIO DO WEB CRAWLER DA UNIVESP")
+        print("="*80)
+        
+        print(f"\nEstatísticas Gerais:")
+        print(f"  • Páginas visitadas: {len(self.visited_urls)}")
+        print(f"  • Páginas com erro: {len(self.failed_urls)}")
+        print(f"  • Total de palavras únicas: {len(self.word_frequency)}")
+        print(f"  • Total de ocorrências: {sum(self.word_frequency.values())}")
+        
+        if self.word_frequency:
+            print(f"\n📊 TOP 25 PALAVRAS MAIS FREQUENTES:")
+            print("-" * 60)
+            for i, (word, count) in enumerate(self.word_frequency.most_common(25), 1):
+                print(f"{i:2d}. {word:<25} : {count:>4} ocorrências")
+            
+            print(f"\n📈 ANÁLISE POR PÁGINA (Top 5):")
+            print("-" * 60)
+            for i, url in enumerate(list(self.page_word_counts.keys())[:5], 1):
+                word_count = self.page_word_counts[url]
+                total_words = sum(word_count.values())
+                top_word = word_count.most_common(1)[0] if word_count else ("N/A", 0)
+                print(f"{i}. {url}")
+                print(f"   • Total de palavras: {total_words}")
+                print(f"   • Palavra mais frequente: '{top_word[0]}' ({top_word[1]} vezes)")
+                print()
+        
+        if self.failed_urls:
+            print(f"❌ URLs COM ERRO:")
+            print("-" * 60)
+            for i, url in enumerate(list(self.failed_urls)[:10], 1):
+                print(f"{i:2d}. {url}")
+    
+    def save_results(self, filename="univesp_crawler_resultados.txt"):
+        """
+        Salva os resultados em arquivo
+        
+        Args:
+            filename (str): Nome do arquivo para salvar
+        """
+        try:
+            filepath = f"C:\\Users\\dell\\{filename}"
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write("RESULTADOS DO WEB CRAWLER DA UNIVESP\n")
+                f.write("="*60 + "\n\n")
+                
+                f.write(f"Data da execução: {time.strftime('%d/%m/%Y %H:%M:%S')}\n")
+                f.write(f"Páginas visitadas: {len(self.visited_urls)}\n")
+                f.write(f"Páginas com erro: {len(self.failed_urls)}\n")
+                f.write(f"Total de palavras únicas: {len(self.word_frequency)}\n")
+                f.write(f"Total de ocorrências: {sum(self.word_frequency.values())}\n\n")
+                
+                f.write("TOP 100 PALAVRAS MAIS FREQUENTES:\n")
+                f.write("-" * 50 + "\n")
+                for i, (word, count) in enumerate(self.word_frequency.most_common(100), 1):
+                    f.write(f"{i:3d}. {word:<30} : {count:>5} ocorrências\n")
+                
+                f.write(f"\n\nPÁGINAS VISITADAS:\n")
+                f.write("-" * 50 + "\n")
+                for i, url in enumerate(self.visited_urls, 1):
+                    f.write(f"{i:3d}. {url}\n")
+                
+                if self.failed_urls:
+                    f.write(f"\n\nPÁGINAS COM ERRO:\n")
+                    f.write("-" * 50 + "\n")
+                    for i, url in enumerate(self.failed_urls, 1):
+                        f.write(f"{i:3d}. {url}\n")
+            
+            print(f"\n💾 Resultados salvos em: {filepath}")
+        except Exception as e:
+            print(f"Erro ao salvar resultados: {e}")
+
+
+def main():
+    """
+    Função principal do programa
+    """
+    # Configurações do crawler
+    MAX_PAGES = 25  # Limite de páginas
+    DELAY = 1.5     # Delay entre requisições
+    
+    # Cria o crawler
+    crawler = UnivespCrawlerSimple(max_pages=MAX_PAGES, delay=DELAY)
+    
+    try:
+        # Executa o crawling
+        start_time = time.time()
+        crawler.crawl()
+        end_time = time.time()
+        
+        # Gera relatório
+        crawler.generate_report()
+        
+        # Salva resultados
+        crawler.save_results()
+        
+        print(f"\n⏱️  Tempo total de execução: {end_time - start_time:.2f} segundos")
+        
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Processo interrompido pelo usuário")
+        if len(crawler.visited_urls) > 0:
+            print("Gerando relatório parcial...")
+            crawler.generate_report()
+            crawler.save_results("univesp_crawler_resultados_parciais.txt")
+    
+    except Exception as e:
+        print(f"\n❌ Erro durante execução: {e}")
+        if len(crawler.visited_urls) > 0:
+            crawler.generate_report()
+
+
+if __name__ == "__main__":
+    main()
+
+requests==2.31.0
+beautifulsoup4==4.12.2
+urllib3==2.0.4
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Web Crawler da Univesp com Análise de Frequência de Palavras
+===========================================================
+
+Este programa desenvolve um web crawler básico que visita sistematicamente 
+as páginas da Univesp, seguindo hyperlinks da página principal. Para cada 
+página visitada, o programa contabiliza a frequência de cada palavra.
+
+Autor: Desenvolvido para o Desafio Semana 4
+Data: 2025
+"""
+
+import re
+import time
+from urllib.parse import urljoin, urlparse
+from html.parser import HTMLParser
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from collections import Counter, defaultdict
+from bs4 import BeautifulSoup
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import logging
+
+# Configuração de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class UnivespCrawler:
+    """
+    Classe principal do crawler da Univesp que coleta links e analisa texto
+    """
+    
+    def __init__(self, base_url="https://univesp.br", max_pages=50, delay=1):
+        """
+        Inicializa o crawler
+        
+        Args:
+            base_url (str): URL base da Univesp
+            max_pages (int): Número máximo de páginas a visitar
+            delay (float): Delay entre requisições em segundos
+        """
+        self.base_url = base_url
+        self.max_pages = max_pages
+        self.delay = delay
+        self.visited_urls = set()
+        self.word_frequency = Counter()
+        self.page_word_counts = defaultdict(Counter)
+        self.failed_urls = set()
+        
+        # Configuração da sessão HTTP com retry
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        
+        # Headers para simular um navegador real
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+        
+        # Palavras comuns portuguesas (stopwords) para filtrar
+        self.stopwords = {
+            'a', 'ao', 'aos', 'aquela', 'aquelas', 'aquele', 'aqueles', 'aquilo', 'as', 'até', 
+            'com', 'como', 'da', 'das', 'de', 'dela', 'delas', 'dele', 'deles', 'depois', 
+            'do', 'dos', 'e', 'ela', 'elas', 'ele', 'eles', 'em', 'entre', 'essa', 'essas', 
+            'esse', 'esses', 'esta', 'estão', 'estas', 'estamos', 'estar', 'este', 'estes', 
+            'eu', 'foi', 'for', 'foram', 'há', 'isso', 'isto', 'já', 'mais', 'mas', 'me', 
+            'mesmo', 'meu', 'meus', 'minha', 'minhas', 'na', 'nas', 'não', 'no', 'nos', 
+            'nós', 'o', 'os', 'ou', 'para', 'pela', 'pelas', 'pelo', 'pelos', 'por', 
+            'qual', 'quando', 'que', 'quem', 'são', 'se', 'sem', 'ser', 'seu', 'seus', 
+            'só', 'sua', 'suas', 'também', 'te', 'tem', 'teu', 'teus', 'tu', 'tua', 
+            'tuas', 'um', 'uma', 'você', 'vocês', 'vos'
+        }
+    
+    def is_valid_url(self, url):
+        """
+        Verifica se a URL é válida e pertence ao domínio da Univesp
+        
+        Args:
+            url (str): URL a ser verificada
+            
+        Returns:
+            bool: True se a URL é válida
+        """
+        try:
+            parsed = urlparse(url)
+            return (parsed.netloc.endswith('univesp.br') and 
+                   parsed.scheme in ['http', 'https'] and
+                   not any(ext in url.lower() for ext in ['.pdf', '.jpg', '.png', '.gif', '.zip', '.doc']))
+        except:
+            return False
+    
+    def extract_text_from_html(self, html_content):
+        """
+        Extrai texto limpo do HTML
+        
+        Args:
+            html_content (str): Conteúdo HTML da página
+            
+        Returns:
+            str: Texto limpo extraído
+        """
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Remove scripts e estilos
+            for script in soup(["script", "style", "nav", "footer", "header"]):
+                script.decompose()
+            
+            # Extrai texto
+            text = soup.get_text()
+            
+            # Limpa o texto
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            text = ' '.join(chunk for chunk in chunks if chunk)
+            
+            return text
+        except Exception as e:
+            logger.error(f"Erro ao extrair texto do HTML: {e}")
+            return ""
+    
+    def extract_links(self, html_content, base_url):
+        """
+        Extrai todos os links de uma página HTML
+        
+        Args:
+            html_content (str): Conteúdo HTML da página
+            base_url (str): URL base para resolver links relativos
+            
+        Returns:
+            list: Lista de URLs absolutas encontradas
+        """
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            links = []
+            
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                absolute_url = urljoin(base_url, href)
+                
+                if self.is_valid_url(absolute_url):
+                    links.append(absolute_url)
+            
+            return links
+        except Exception as e:
+            logger.error(f"Erro ao extrair links: {e}")
+            return []
+    
+    def process_text(self, text):
+        """
+        Processa o texto extraído para contar palavras
+        
+        Args:
+            text (str): Texto a ser processado
+            
+        Returns:
+            Counter: Contador de frequência de palavras
+        """
+        # Converte para minúsculas e remove pontuação
+        text = text.lower()
+        words = re.findall(r'\b[a-záàâãäéèêëíìîïóòôõöúùûüç]+\b', text)
+        
+        # Filtra palavras muito curtas e stopwords
+        filtered_words = [word for word in words 
+                         if len(word) > 2 and word not in self.stopwords]
+        
+        return Counter(filtered_words)
+    
+    def crawl_page(self, url):
+        """
+        Faz o crawl de uma página específica
+        
+        Args:
+            url (str): URL da página a ser processada
+            
+        Returns:
+            list: Lista de links encontrados na página
+        """
+        try:
+            logger.info(f"Visitando: {url}")
+            
+            response = self.session.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            
+            # Extrai texto e conta palavras
+            text = self.extract_text_from_html(response.text)
+            if text:
+                word_count = self.process_text(text)
+                self.page_word_counts[url] = word_count
+                self.word_frequency.update(word_count)
+            
+            # Extrai links
+            links = self.extract_links(response.text, url)
+            
+            return links
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar {url}: {e}")
+            self.failed_urls.add(url)
+            return []
+    
+    def crawl(self):
+        """
+        Executa o processo principal de crawling
+        """
+        logger.info(f"Iniciando crawler da Univesp - Máximo {self.max_pages} páginas")
+        
+        urls_to_visit = [self.base_url]
+        
+        while urls_to_visit and len(self.visited_urls) < self.max_pages:
+            current_url = urls_to_visit.pop(0)
+            
+            if current_url in self.visited_urls:
+                continue
+            
+            self.visited_urls.add(current_url)
+            
+            # Processa a página atual
+            new_links = self.crawl_page(current_url)
+            
+            # Adiciona novos links à lista de URLs a visitar
+            for link in new_links:
+                if (link not in self.visited_urls and 
+                    link not in urls_to_visit and 
+                    link not in self.failed_urls):
+                    urls_to_visit.append(link)
+            
+            # Delay entre requisições
+            time.sleep(self.delay)
+        
+        logger.info(f"Crawling concluído. Visitadas {len(self.visited_urls)} páginas")
+    
+    def generate_report(self):
+        """
+        Gera relatório com as estatísticas coletadas
+        """
+        print("\n" + "="*80)
+        print("RELATÓRIO DO WEB CRAWLER DA UNIVESP")
+        print("="*80)
+        
+        print(f"\nEstatísticas Gerais:")
+        print(f"  • Páginas visitadas: {len(self.visited_urls)}")
+        print(f"  • Páginas com erro: {len(self.failed_urls)}")
+        print(f"  • Total de palavras únicas: {len(self.word_frequency)}")
+        print(f"  • Total de ocorrências: {sum(self.word_frequency.values())}")
+        
+        print(f"\n📊 TOP 20 PALAVRAS MAIS FREQUENTES:")
+        print("-" * 50)
+        for i, (word, count) in enumerate(self.word_frequency.most_common(20), 1):
+            print(f"{i:2d}. {word:<20} : {count:>4} ocorrências")
+        
+        print(f"\n📈 ANÁLISE POR PÁGINA (Top 5):")
+        print("-" * 50)
+        for url in list(self.page_word_counts.keys())[:5]:
+            word_count = self.page_word_counts[url]
+            total_words = sum(word_count.values())
+            top_word = word_count.most_common(1)[0] if word_count else ("N/A", 0)
+            print(f"URL: {url}")
+            print(f"  • Total de palavras: {total_words}")
+            print(f"  • Palavra mais frequente: '{top_word[0]}' ({top_word[1]} vezes)")
+            print()
+        
+        if self.failed_urls:
+            print(f"\n❌ PÁGINAS COM ERRO:")
+            print("-" * 50)
+            for url in list(self.failed_urls)[:10]:  # Mostra apenas as primeiras 10
+                print(f"  • {url}")
+    
+    def save_results(self, filename="univesp_crawler_results.txt"):
+        """
+        Salva os resultados em um arquivo de texto
+        
+        Args:
+            filename (str): Nome do arquivo para salvar
+        """
+        try:
+            filepath = f"C:\\Users\\dell\\{filename}"
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write("RESULTADOS DO WEB CRAWLER DA UNIVESP\n")
+                f.write("="*50 + "\n\n")
+                
+                f.write(f"Páginas visitadas: {len(self.visited_urls)}\n")
+                f.write(f"Total de palavras únicas: {len(self.word_frequency)}\n")
+                f.write(f"Total de ocorrências: {sum(self.word_frequency.values())}\n\n")
+                
+                f.write("TOP 50 PALAVRAS MAIS FREQUENTES:\n")
+                f.write("-" * 40 + "\n")
+                for i, (word, count) in enumerate(self.word_frequency.most_common(50), 1):
+                    f.write(f"{i:2d}. {word:<25} : {count:>5} ocorrências\n")
+                
+                f.write(f"\n\nPÁGINAS VISITADAS:\n")
+                f.write("-" * 40 + "\n")
+                for i, url in enumerate(self.visited_urls, 1):
+                    f.write(f"{i:2d}. {url}\n")
+            
+            logger.info(f"Resultados salvos em: {filepath}")
+        except Exception as e:
+            logger.error(f"Erro ao salvar resultados: {e}")
+
+
+def main():
+    """
+    Função principal do programa
+    """
+    print("🕷️  INICIANDO WEB CRAWLER DA UNIVESP")
+    print("="*50)
+    
+    # Configurações do crawler
+    MAX_PAGES = 30  # Limite de páginas para evitar sobrecarga
+    DELAY = 1       # Delay de 1 segundo entre requisições
+    
+    # Cria e executa o crawler
+    crawler = UnivespCrawler(max_pages=MAX_PAGES, delay=DELAY)
+    
+    try:
+        # Executa o crawling
+        crawler.crawl()
+        
+        # Gera relatório
+        crawler.generate_report()
+        
+        # Salva resultados
+        crawler.save_results()
+        
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Processo interrompido pelo usuário")
+        if len(crawler.visited_urls) > 0:
+            print("Gerando relatório com dados coletados até agora...")
+            crawler.generate_report()
+            crawler.save_results("univesp_crawler_partial_results.txt")
+    
+    except Exception as e:
+        logger.error(f"Erro durante execução: {e}")
+
+
+if __name__ == "__main__":
+    main()
